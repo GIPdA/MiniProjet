@@ -74,10 +74,7 @@ class ProgressBar(Display):
 		pgb = QtGui.QProgressBar()
 		self.setWidget(pgb)
 		
-		pgb.setOrientation(Qt.Horizontal)
-		
-		if vertical:
-			pgb.setOrientation(Qt.Vertical)
+		pgb.setOrientation(Qt.Vertical if vertical else Qt.Horizontal)
 		
 		pgb.setMinimum(self.valueRange()['min'])
 		pgb.setMaximum(self.valueRange()['max'])
@@ -105,8 +102,62 @@ class ProgressBar(Display):
 			if hasattr(self, '_textValue'):
 				self._textValue.setText(self._valueFormatting.format(value))
 		else:
-			raise TypeError 
+			raise TypeError
+	
+
+class Slider(Display):
+	''' Display a slider '''
+	
+	def __init__(self, displayID, \
+	             valueFormatting = None, valueBefore = False, valueRange = None, \
+	             vertical = False, \
+	             tickInterval = None, invert = False):
 		
+		Display.__init__(self, displayID)
+		
+		if valueRange:
+			self.setValueRange(valueRange)
+		
+		sld = QtGui.QSlider()
+		sld.valueChanged.connect(self._sliderValueChanged)
+		
+		self.setWidget(sld)
+		
+		sld.setOrientation(Qt.Vertical if vertical else Qt.Horizontal)
+		
+		if invert:
+			sld.setInvertedAppearance(True)
+		
+		sld.setMinimum(self.valueRange()['min'])
+		sld.setMaximum(self.valueRange()['max'])
+		
+		# Add text before or after
+		if valueFormatting:	# ex. 'The value: {0}'
+			self._textValue = QLabel()
+			self._valueFormatting = valueFormatting
+			self._vbx.setDirection(QBoxLayout.LeftToRight)
+			
+			if valueBefore:
+				self._vbx.insertWidget(0, self._textValue)
+			else:
+				self._vbx.addWidget(self._textValue)
+	
+	def _sliderValueChanged(self, value):
+		self.setValue(value)
+	
+	def setValue(self, value):
+		''' Reimplement setValue to update the progress bar.
+		Raise TypeError if value not a int.
+		'''
+		Display.setValue(self, value)
+		
+		if isinstance(value, int):
+			self.widget().setValue(value)
+			if hasattr(self, '_textValue'):
+				self._textValue.setText(self._valueFormatting.format(value))
+		else:
+			raise TypeError 
+
 
 class QMLWidget(Display):
 	

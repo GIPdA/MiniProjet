@@ -15,7 +15,7 @@ from portsListener import PortsListener
 from serialEvents import SerialEvents
 import time
 
-from displays import Led, ProgressBar, QMLWidget
+from displays import Led, ProgressBar, QMLWidget, Slider
 
 
 class Widget(QDeclarativeView):
@@ -60,6 +60,10 @@ def main(args):
 	w2 = addSubWindow(ProgressBar('progressbar2', '< {0}'))
 	w2.setValue(60)
 	
+	w3 = addSubWindow(Slider('slider1', '< {0}'))
+	w3.setValue(40)
+	
+	w3.valueChanged.connect(w2.setValue)
 	
 	
 	mainwindow.setCentralWidget(mdiarea)
