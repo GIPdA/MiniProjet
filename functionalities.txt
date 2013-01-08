@@ -1,0 +1,26 @@
+
+Afficheurs :
+
+Voyant TOR           : RadioButton         -> booléen
+Télémètre analogique : ProgressBar, Label  -> flottant/entier
+Afficheur alphanum   : Texte, Label        -> texte
+
+
+Controles :
+
+Contrôle moteur : Slider              -> flottant/entier
+         servo
+
+
+Système de nommage : 
+< id > [< type > < variation >] < interface d'affichage > [< groupe >]
+
+id					: identifiant de la fonctionnalité (string) - requis
+type					: type de la valeur transmise (par défaut: automatique) - optionnel
+variation				: plage de variation de la valeur (par défaut: 0 à 100) - optionnel
+interface d'affichage	: nom de l'interface désirée (par défaut: valeur en clair) - requis
+groupe				: numéro du groupe dans lequel la fonctionnalité sera associée. Utilisé pour regrouper ensuite les fonctionnalités du même groupe dans une même fenêtre. - optionnel
+
+En anglais :
+
+id type range display group

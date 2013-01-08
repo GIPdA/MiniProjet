@@ -95,7 +95,10 @@ def main():
 
     p = parser.parse_args()
 
-    print(PortsListener.ports(p.regexp))
+    if p.regexp != None:
+        print(PortsListener.ports(p.regexp[0]))
+    else:
+        print(PortsListener.ports())
 
 # test
 if __name__ == '__main__':
