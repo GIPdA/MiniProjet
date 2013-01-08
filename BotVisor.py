@@ -54,13 +54,13 @@ def main(args):
 	addSubWindow(Led('Blue LED', True))
 	addSubWindow(Led('Red LED'))
 	
-	w = addSubWindow(ProgressBar('progressbar1', '> {0}', valueBefore = True))
+	w = addSubWindow(ProgressBar('progressbar1', '{0}', valueBefore = True))
 	w.setValue(60)
 	
-	w2 = addSubWindow(ProgressBar('progressbar2', '< {0}'))
+	w2 = addSubWindow(ProgressBar('progressbar2', '{0}'))
 	w2.setValue(60)
 	
-	w3 = addSubWindow(Slider('slider1', '< {0}'))
+	w3 = addSubWindow(Slider('slider1'))
 	w3.setValue(40)
 	
 	w3.valueChanged.connect(w2.setValue)

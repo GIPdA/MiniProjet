@@ -61,11 +61,12 @@ class Led(Display):
 			raise TypeError
 
 
-
 class ProgressBar(Display):
 	''' Display a progress bar '''
 	
-	def __init__(self, displayID, valueFormatting = None, valueRange = None, vertical = False, valueBefore = False):
+	def __init__(self, displayID, \
+	             valueFormatting = None, valueBefore = False, valueRange = None, \
+	             vertical = False):
 		Display.__init__(self, displayID)
 		
 		if valueRange:
@@ -103,7 +104,7 @@ class ProgressBar(Display):
 				self._textValue.setText(self._valueFormatting.format(value))
 		else:
 			raise TypeError
-	
+
 
 class Slider(Display):
 	''' Display a slider '''
@@ -143,10 +144,11 @@ class Slider(Display):
 				self._vbx.addWidget(self._textValue)
 	
 	def _sliderValueChanged(self, value):
+		''' Slider value changed (by user), update internal functionality's value '''
 		self.setValue(value)
 	
 	def setValue(self, value):
-		''' Reimplement setValue to update the progress bar.
+		''' Reimplement setValue to update the slider.
 		Raise TypeError if value not a int.
 		'''
 		Display.setValue(self, value)
