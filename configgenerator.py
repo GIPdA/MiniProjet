@@ -14,7 +14,7 @@ def main(args):
 	a = QtGui.QApplication(args)
 	
 	# id type range display group
-	settings = QSettings('mybot1.bvc', QSettings.IniFormat);
+	settings = QSettings('mybot.bvc', QSettings.IniFormat);
 	
 	settings.beginGroup('robot')
 	settings.setValue('name', 'Super Bot 1')
@@ -24,9 +24,13 @@ def main(args):
 	
 	settings.setValue('led1/display', 'Led')
 	settings.setValue('led1/group', 0)
+	settings.setValue('led1/showID', True)
 	
 	settings.setValue('led2/display', 'Led')
 	settings.setValue('led2/group', 0)
+	
+	settings.setValue('d1/display', 'Dial')
+	settings.setValue('d1/range', (0, 100))
 	settings.endGroup()
 	
 	#r = a.exec_()

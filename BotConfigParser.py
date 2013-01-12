@@ -39,7 +39,8 @@ class BotConfigParser:
 			settings.endGroup()
 		settings.endGroup()
 		
-		print(funcData)
+		#print(funcData)
+		return funcData
 
 
 

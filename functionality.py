@@ -10,6 +10,7 @@ class Functionality(QtCore.QObject):
 	'''
 	
 	idChanged = QtCore.Signal(str)
+	valueChanged = QtCore.Signal()
 	valueChanged = QtCore.Signal(object)
 	rangeChanged = QtCore.Signal(dict)
 	
@@ -21,6 +22,10 @@ class Functionality(QtCore.QObject):
 	
 	def __init__(self):
 		QtCore.QObject.__init__(self)
+		
+		self._id = None
+		self._value = None
+		self._range = {'min': 0, 'max': 100}
 	
 	
 	def setID(self, functionId):
@@ -40,38 +45,42 @@ class Functionality(QtCore.QObject):
 		''' Set internal functionality's value '''
 		self._value = value
 		self.valueChanged.emit(self._value)
-		
 	
 	def value(self):
 		''' Functionality's value '''
 		return self._value
 	
 		
-	def setValueRange(self, lowValue, highValue):
+	def setValueRange(self, minValue, maxValue):
 		''' Set internal functionality's value range '''
+		if isinstance(minValue, str):
+			minValue = int(minValue)
+		if isinstance(maxValue, str):
+			maxValue = int(maxValue)
+		
 		# Check range correctness. Set to None to don't change the value
-		if (lowValue < highValue) or (lowValue == None or highValue == None):
-			if lowValue != None:
-				self._range['min'] = lowValue
+		if (minValue < maxValue) or (minValue == None or maxValue == None):
+			if minValue != None:
+				self._range['min'] = minValue
 			
-			if highValue != None:
-				self._range['max'] = highValue
+			if maxValue != None:
+				self._range['max'] = maxValue
 			
 			self.rangeChanged.emit(self._range)
 			
 		else:
 			raise ValueError
 	
-	def setValueRange(self, valueRange):
-		''' Provided for convenience.
-		Set the value range from list (min value, max value) or dict ('min':value, 'max':value)
-		'''
-		if isinstance(valueRange, dict):
-			setRange(valueRange['min'], valueRange['max'])
-		elif isinstance(valueRange, list):
-			setRange(valueRange[0], valueRange[1])
-		else:
-			raise TypeError
+	# def setValueRange(self, valueRange):
+	# 	''' Provided for convenience.
+	# 	Set the value range from list (min value, max value) or dict ('min':value, 'max':value)
+	# 	'''
+	# 	if isinstance(valueRange, dict):
+	# 		self.setValueRange(valueRange['min'], valueRange['max'])
+	# 	elif isinstance(valueRange, list):
+	# 		self.setValueRange(valueRange[0], valueRange[1])
+	# 	else:
+	# 		raise TypeError
 	
 	def valueRange(self):
 		''' Value range (dict {'min':value, 'max':value}) '''

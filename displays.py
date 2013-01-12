@@ -20,16 +20,17 @@ class Display(Functionality, QWidget):
 		QWidget.__init__(self)
 		
 		# Create empty layout
-		self._vbx = QtGui.QVBoxLayout(self)
+		self._vbx = QtGui.QGridLayout(self)
+		self._vbx.setContentsMargins(0, 0, 0, 0)
 		
 		self.setID(displayID)
 	
 	
-	def setWidget(self, widget):
+	def setWidget(self, widget, row=1, col=1):
 		''' Private - Set widget to display '''
 		self._vbx.removeWidget(self._widget) # Remove current widget ##TODO: is that necessary ??
 		self._widget = widget
-		self._vbx.addWidget(self._widget) # Add widget to layouts
+		self._vbx.addWidget(self._widget, row, col) # Add widget to layout
 	
 	def widget(self):
 		''' Display widget '''
@@ -47,7 +48,12 @@ class Led(Display):
 		Display.__init__(self, displayID)
 		
 		self.setWidget(QtGui.QRadioButton(self.id() if showID else ''))
+		
+		self.widget().toggled.connect(self._ledStateChanged)
 	
+	
+	def _ledStateChanged(self, state):
+		self.setValue(state)
 	
 	def setValue(self, value):
 		''' Reimplement setValue to update the radio button.
@@ -65,7 +71,8 @@ class ProgressBar(Display):
 	''' Display a progress bar '''
 	
 	def __init__(self, displayID, \
-	             valueFormatting = None, valueBefore = False, valueRange = None, \
+	             valueFormatting = None, valueBefore = False, \
+	             valueRange = None, \
 	             vertical = False):
 		Display.__init__(self, displayID)
 		
@@ -84,12 +91,13 @@ class ProgressBar(Display):
 		if valueFormatting:	# ex. 'The value: {0}'
 			self._textValue = QLabel()
 			self._valueFormatting = valueFormatting
-			self._vbx.setDirection(QBoxLayout.LeftToRight)
 			
 			if valueBefore:
-				self._vbx.insertWidget(0, self._textValue)
+				self._vbx.addWidget(self._textValue, 1, 0)
 			else:
-				self._vbx.addWidget(self._textValue)
+				self._vbx.addWidget(self._textValue, 1, 2)
+			
+			self.setValue(0)
 	
 	
 	def setValue(self, value):
@@ -104,6 +112,13 @@ class ProgressBar(Display):
 				self._textValue.setText(self._valueFormatting.format(value))
 		else:
 			raise TypeError
+	
+	def setValueRange(self, minValue, maxValue):
+		
+		self.widget().setMinimum(minValue)
+		self.widget().setMaximum(maxValue)
+		
+		Display.setValueRange(minValue, maxValue)
 
 
 class Slider(Display):
@@ -136,12 +151,13 @@ class Slider(Display):
 		if valueFormatting:	# ex. 'The value: {0}'
 			self._textValue = QLabel()
 			self._valueFormatting = valueFormatting
-			self._vbx.setDirection(QBoxLayout.LeftToRight)
 			
 			if valueBefore:
-				self._vbx.insertWidget(0, self._textValue)
+				self._vbx.addWidget(self._textValue, 1, 0)
 			else:
-				self._vbx.addWidget(self._textValue)
+				self._vbx.addWidget(self._textValue, 1, 2)
+			
+			self.setValue(0)
 	
 	def _sliderValueChanged(self, value):
 		''' Slider value changed (by user), update internal functionality's value '''
@@ -159,6 +175,119 @@ class Slider(Display):
 				self._textValue.setText(self._valueFormatting.format(value))
 		else:
 			raise TypeError 
+	
+	def setValueRange(self, minValue, maxValue):
+		
+		self.widget().setMinimum(minValue)
+		self.widget().setMaximum(maxValue)
+		
+		Display.setValueRange(minValue, maxValue)
+
+
+class Dial(Display):
+	''' Display a dial '''
+	
+	def __init__(self, displayID, \
+	             valueFormatting = None, valueBefore = False, valueRange = None, \
+	             vertical = False, \
+	             tickInterval = None, invert = False):
+		
+		Display.__init__(self, displayID)
+		
+		if valueRange:
+			self.setValueRange(valueRange)
+		
+		dial = QtGui.QDial()
+		dial.valueChanged.connect(self._dialValueChanged)
+		
+		self.setWidget(dial)
+		
+		dial.setOrientation(Qt.Vertical if vertical else Qt.Horizontal)
+		
+		if invert:
+			dial.setInvertedAppearance(True)
+		
+		dial.setMinimum(self.valueRange()['min'])
+		dial.setMaximum(self.valueRange()['max'])
+		
+		# Add text before or after
+		if valueFormatting:	# ex. 'The value: {0}'
+			self._textValue = QLabel()
+			self._valueFormatting = valueFormatting
+			
+			if valueBefore:
+				self._vbx.addWidget(self._textValue, 1, 0)
+			else:
+				self._vbx.addWidget(self._textValue, 1, 2)
+			
+			self.setValue(0)
+	
+	def _dialValueChanged(self, value):
+		''' Dial value changed (by user), update internal functionality's value '''
+		self.setValue(value)
+	
+	def setValue(self, value):
+		''' Reimplement setValue to update the dial.
+		Raise TypeError if value not a int.
+		'''
+		Display.setValue(self, value)
+		
+		if isinstance(value, int):
+			self.widget().setValue(value)
+			if hasattr(self, '_textValue'):
+				self._textValue.setText(self._valueFormatting.format(value))
+		else:
+			raise TypeError 
+	
+	def setValueRange(self, minValue, maxValue):
+		
+		self.widget().setMinimum(minValue)
+		self.widget().setMaximum(maxValue)
+		
+		Display.setValueRange(self, minValue, maxValue)
+	
+	# def setValueRange(self, valueRange):
+	# 	Display.setValueRange(self, valueRange)
+		
+	# 	self.widget().setMinimum(self.valueRange['min'])
+	# 	self.widget().setMaximum(self.valueRange['max'])
+
+
+class Alphanum(Display):
+	''' Display an alphanumeric "screen" '''
+	
+	def __init__(self, displayID):
+		
+		Display.__init__(self, displayID)
+		
+		te = QTextEdit()
+		te.textChanged.connect(self._textChanged)
+		
+		self.setWidget(te)
+		self.widget().setMaximumHeight(60)
+		
+		self._vbx.setVerticalSpacing(1)
+		
+		self._wordCount = QLabel()
+		self._vbx.addWidget(self._wordCount, 2, 1)
+	
+	
+	def _textChanged(self):
+		''' Text changed (by user), update internal functionality's value '''
+		Display.setValue(self, self.widget().toPlainText())
+		self._wordCount.setText('Word count: ' + str(len(self.widget().toPlainText())))
+	
+	def setValue(self, value):
+		''' Reimplement setValue to update the dial.
+		Raise TypeError if value not a int.
+		'''
+		Display.setValue(self, value)
+		
+		if isinstance(value, str):
+			self.widget().setText(value)
+		else:
+			raise TypeError('"str" is the only type allowed.')
+
 
 
 class QMLWidget(Display):
@@ -178,7 +307,5 @@ class QMLWidget(Display):
 		self._vbx.setContentsMargins(0, 0, 0, 0)
 		
 		self.setWidget(qmlView)
-	
-	
-	
-	
+
+

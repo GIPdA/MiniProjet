@@ -13,14 +13,15 @@ Contrôle moteur : Slider              -> flottant/entier
 
 
 Système de nommage : 
-< id > [< type > < variation >] < interface d'affichage > [< groupe >]
+< id > [< nom > < type > < variation >] < interface d'affichage > [< groupe >]
 
-id					: identifiant de la fonctionnalité (string) - requis
+id						: identifiant de la fonctionnalité (string) - requis
+nom 					: nom de la fonctionnalité
 type					: type de la valeur transmise (par défaut: automatique) - optionnel
 variation				: plage de variation de la valeur (par défaut: 0 à 100) - optionnel
 interface d'affichage	: nom de l'interface désirée (par défaut: valeur en clair) - requis
-groupe				: numéro du groupe dans lequel la fonctionnalité sera associée. Utilisé pour regrouper ensuite les fonctionnalités du même groupe dans une même fenêtre. - optionnel
+groupe					: numéro du groupe dans lequel la fonctionnalité sera associée. Utilisé pour regrouper ensuite les fonctionnalités du même groupe dans une même fenêtre. - optionnel
 
 En anglais :
 
-id type range display group
+id name type range display group layout

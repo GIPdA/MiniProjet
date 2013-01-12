@@ -32,7 +32,7 @@ class GenericPort:
 
 class SerialCom(QObject):
 	
-	readyRead = QtCore.Signal(json)
+	readyRead = QtCore.Signal()
 	
 	serial = None
 	_serialEv = None
@@ -138,7 +138,8 @@ class SerialCom(QObject):
 		self._sendStr(json_str)
 	
 	def _sendStr(self, string):
-		self.serial.write(bytes('<' + string + '>', _CODING_SERIAL))
+		if self.serial.isOpen():
+			self.serial.write(bytes('<' + string + '>', _CODING_SERIAL))
 
 
 

@@ -1,0 +1,30 @@
+[robot]
+name=Super Bot 1
+
+[functionalities]
+led1\name=Led Une
+led1\display=Led
+led1\group=0
+led1\layout=r2
+led1\showID=true
+
+led2\display=Led
+led2\group=0
+led2\layout=r2
+
+led3\name=Led 3
+led3\display=Led
+led3\group=0
+led3\layout=r2
+
+p1\display=ProgressBar
+p1\group=0
+p1\layout=r0c1
+p2\display=Slider
+p2\group=0
+p2\layout=r1c1
+
+d1\display=Dial
+d1\range=-90, 90
+
+an\display=Alphanum
