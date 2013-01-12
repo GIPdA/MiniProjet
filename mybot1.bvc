@@ -19,12 +19,54 @@ led3\layout=r2
 
 p1\display=ProgressBar
 p1\group=0
-p1\layout=r0c1
+p1\layout=r0c0cs2
 p2\display=Slider
 p2\group=0
-p2\layout=r1c1
+p2\layout=r1c0cs2
 
 d1\display=Dial
 d1\range=-90, 90
 
 an\display=Alphanum
+
+l1\display=Led
+l1\group=1
+l2\display=Led
+l2\group=1
+l3\display=Led
+l3\group=1
+l4\display=Led
+l4\group=1
+l5\display=Led
+l5\group=1
+l6\display=Led
+l6\group=1
+l7\display=Led
+l7\group=1
+l8\display=Led
+l8\group=1
+
+lr1\display=Led
+lr1\group=2
+lr1\layout=r0
+lr2\display=Led
+lr2\group=2
+lr2\layout=r0
+lr3\display=Led
+lr3\group=2
+lr3\layout=r0
+lr4\display=Led
+lr4\group=2
+lr4\layout=r0
+lr5\display=Led
+lr5\group=2
+lr5\layout=r0
+lr6\display=Led
+lr6\group=2
+lr6\layout=r0
+lr7\display=Led
+lr7\group=2
+lr7\layout=r0
+lr8\display=Led
+lr8\group=2
+lr8\layout=r0

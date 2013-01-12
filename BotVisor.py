@@ -22,6 +22,8 @@ class MainWindow(QtGui.QMainWindow):
 	_fids = {}	# Functionalities display objects by functionality ID
 	_wgtgrp = {}	# Widgets by group
 	
+	_layoutMatchString = r'(r(?P<row>\d+))?(c(?P<col>\d+))?(rs(?P<rowspan>\d+))?(cs(?P<colspan>\d+))?'
+	
 	def __init__(self):
 		QMainWindow.__init__(self)
 		
@@ -36,9 +38,6 @@ class MainWindow(QtGui.QMainWindow):
 		
 		print('Found ports:', self._serialCom.ports())
 		
-		# w = self.addSubWindow(Slider('progressbar1', '{0}', valueBefore = True))
-		# w.setValue(60)
-		# w.valueChanged.connect(self.valc)
 		
 		
 		bc = BotConfigParser()
@@ -46,9 +45,9 @@ class MainWindow(QtGui.QMainWindow):
 		
 		#print(data)
 		
-		print('All keys:', data.keys())
+		#print('All keys:', data.keys())
 		
-		print(json.dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))
+		#print(json.dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))
 		
 		for fuKeys in data:
 			#print(fuKeys)
@@ -62,6 +61,8 @@ class MainWindow(QtGui.QMainWindow):
 		
 		
 		self.setCentralWidget(self.mdiarea)
+		self.setDockNestingEnabled(True)
+	
 	
 	
 	def _serialEvent(self):
@@ -92,14 +93,12 @@ class MainWindow(QtGui.QMainWindow):
 		#subWindowList()
 		return widget
 	
-	
-	def loadClassFromModule(self, module_name, class_name):
-		''' Dynamic class loading from a module '''
-		# load the module, will raise ImportError if module cannot be loaded
-		m = importlib.import_module(module_name)
-		# get the class, will raise AttributeError if class cannot be found
-		c = getattr(m, class_name)
-		return c
+	def _addDockWidget(self, widget, title):
+		''' Add a dock with title containing widget '''
+		newDock = QDockWidget(title)
+		newDock.setWidget(widget)
+		self.addDockWidget(Qt.LeftDockWidgetArea, newDock)
+		return widget
 	
 	
 	def loadFunctionality(self, fid, display, options):
@@ -115,6 +114,14 @@ class MainWindow(QtGui.QMainWindow):
 					c = c+1
 			return r, c
 		
+		def loadClassFromModule(module_name, class_name):
+			''' Dynamic class loading from a module '''
+			# load the module, will raise ImportError if module cannot be loaded
+			m = importlib.import_module(module_name)
+			# get the class, will raise AttributeError if class cannot be found
+			c = getattr(m, class_name)
+			return c
+		
 		
 		name = fid
 		# Check for friendly name
@@ -124,18 +131,18 @@ class MainWindow(QtGui.QMainWindow):
 		print('Add display:', fid, '(' +display+ ')')
 		
 		# Load class instance
-		classInstance = self.loadClassFromModule('displays', display)
+		classInstance = loadClassFromModule('displays', display)
 		
 		if display == 'Led':
-			c = classInstance(name, True)
+			c = classInstance(fid, name, True)
 		elif display == 'ProgressBar':
-			c = classInstance(name, '{0}')
+			c = classInstance(fid, name, '{0}')
 		elif display == 'Slider':
-			c = classInstance(name, '{0}')
+			c = classInstance(fid, name, '{0}')
 		elif display == 'Dial':
-			c = classInstance(name, '{0}')
+			c = classInstance(fid, name, '{0}')
 		elif display == 'Alphanum':
-			c = classInstance(name)
+			c = classInstance(fid, name)
 		else:
 			raise TypeError('Unknown display type')
 		
@@ -173,20 +180,20 @@ class MainWindow(QtGui.QMainWindow):
 			
 			# Layout position
 			row, col = None, 0
+			rowSpan, colSpan = 1, 1
 			
 			# Check if layout position specified
 			if 'layout' in options:
-				m = re.search(r'(r(?P<row>\d+))?(c(?P<col>\d+))?', options['layout'])
+				m = re.search(self._layoutMatchString, options['layout'])
 				# Get values
 				if m:
 					gd = m.groupdict()
-					row = gd['row']
-					col = gd['col']
+					#print(gd)
+					row = int(gd['row']) if gd['row'] != None else None
+					col = int(gd['col']) if gd['col'] != None else None
 					
-					if row != None:
-						row = int(row)
-					if col != None:
-						col = int(col)
+					rowSpan = int(gd['rowspan']) if gd['rowspan'] != None else 1
+					colSpan = int(gd['colspan']) if gd['colspan'] != None else 1
 					
 					# Default if row & col to None
 					if (row, col) == (None, None):
@@ -200,10 +207,10 @@ class MainWindow(QtGui.QMainWindow):
 			if row == None:
 				row,col = availableLayoutPosition(widget.layout(), 'r', (0, col))
 			
-			#print('Layout: ', row, col)
+			print('Layout: ', row, col, rowSpan, colSpan)
 			
 			# Add the widget to the layout
-			widget.layout().addWidget(c, row, col)
+			widget.layout().addWidget(c, row, col, rowSpan, colSpan)
 			
 		else:	# No group specified
 			widget = c
@@ -211,6 +218,7 @@ class MainWindow(QtGui.QMainWindow):
 		# Create new subwindow if needed
 		if newsw:
 			self.addSubWindow(widget, name)
+			#self._addDockWidget(widget, name)
 	
 	
 	def functionalityValueChanged(self, fobj):

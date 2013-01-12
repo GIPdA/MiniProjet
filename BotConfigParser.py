@@ -7,6 +7,7 @@ from PySide import QtGui, QtCore
 from PySide.QtCore import *
 from PySide.QtGui import *
 import json
+from collections import OrderedDict
 
 
 class BotConfigParser:
@@ -24,12 +25,12 @@ class BotConfigParser:
 		
 		settings.beginGroup('functionalities')
 		
-		funcData = {}
+		funcData = OrderedDict()
 		
 		for group in settings.childGroups():
 			settings.beginGroup(group)
 			
-			tmpDict = {}
+			tmpDict = OrderedDict()
 			
 			for key in settings.childKeys():
 				tmpDict[key] = settings.value(key)

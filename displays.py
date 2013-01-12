@@ -14,8 +14,9 @@ class Display(Functionality, QWidget):
 	
 	_widget = None
 	_vbx = None
+	name = ''
 	
-	def __init__(self, displayID):
+	def __init__(self, displayID, friendlyName):
 		Functionality.__init__(self)
 		QWidget.__init__(self)
 		
@@ -24,6 +25,7 @@ class Display(Functionality, QWidget):
 		self._vbx.setContentsMargins(0, 0, 0, 0)
 		
 		self.setID(displayID)
+		self.name = friendlyName
 	
 	
 	def setWidget(self, widget, row=1, col=1):
@@ -41,13 +43,13 @@ class Display(Functionality, QWidget):
 class Led(Display):
 	''' Display a radio button as a LED '''
 	
-	def __init__(self, displayID, showID = False):
+	def __init__(self, displayID, friendlyName, showID = False):
 		''' displayID: object id
 		showID: True to show id as radio button text
 		'''
-		Display.__init__(self, displayID)
+		Display.__init__(self, displayID, friendlyName)
 		
-		self.setWidget(QtGui.QRadioButton(self.id() if showID else ''))
+		self.setWidget(QtGui.QRadioButton(friendlyName if showID else ''))
 		
 		self.widget().toggled.connect(self._ledStateChanged)
 	
@@ -70,11 +72,11 @@ class Led(Display):
 class ProgressBar(Display):
 	''' Display a progress bar '''
 	
-	def __init__(self, displayID, \
+	def __init__(self, displayID, friendlyName, \
 	             valueFormatting = None, valueBefore = False, \
 	             valueRange = None, \
 	             vertical = False):
-		Display.__init__(self, displayID)
+		Display.__init__(self, displayID, friendlyName)
 		
 		if valueRange:
 			self.setValueRange(valueRange)
@@ -124,12 +126,12 @@ class ProgressBar(Display):
 class Slider(Display):
 	''' Display a slider '''
 	
-	def __init__(self, displayID, \
+	def __init__(self, displayID, friendlyName, \
 	             valueFormatting = None, valueBefore = False, valueRange = None, \
 	             vertical = False, \
 	             tickInterval = None, invert = False):
 		
-		Display.__init__(self, displayID)
+		Display.__init__(self, displayID, friendlyName)
 		
 		if valueRange:
 			self.setValueRange(valueRange)
@@ -187,12 +189,12 @@ class Slider(Display):
 class Dial(Display):
 	''' Display a dial '''
 	
-	def __init__(self, displayID, \
+	def __init__(self, displayID, friendlyName, \
 	             valueFormatting = None, valueBefore = False, valueRange = None, \
 	             vertical = False, \
 	             tickInterval = None, invert = False):
 		
-		Display.__init__(self, displayID)
+		Display.__init__(self, displayID, friendlyName)
 		
 		if valueRange:
 			self.setValueRange(valueRange)
@@ -256,9 +258,9 @@ class Dial(Display):
 class Alphanum(Display):
 	''' Display an alphanumeric "screen" '''
 	
-	def __init__(self, displayID):
+	def __init__(self, displayID, friendlyName):
 		
-		Display.__init__(self, displayID)
+		Display.__init__(self, displayID, friendlyName)
 		
 		te = QTextEdit()
 		te.textChanged.connect(self._textChanged)
@@ -292,8 +294,8 @@ class Alphanum(Display):
 
 class QMLWidget(Display):
 	
-	def __init__(self, displayID, qmlFile):
-		Display.__init__(self, displayID)
+	def __init__(self, displayID, friendlyName, qmlFile):
+		Display.__init__(self, displayID, friendlyName)
 		
 		qmlView = QDeclarativeView()
 		
