@@ -224,6 +224,7 @@ class Dial(Display):
 			
 			self.setValue(0)
 	
+	
 	def _dialValueChanged(self, value):
 		''' Dial value changed (by user), update internal functionality's value '''
 		self.setValue(value)

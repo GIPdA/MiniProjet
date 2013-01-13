@@ -14,8 +14,24 @@ import time
 
 from BotConfigParser import BotConfigParser
 import importlib
-from displays import Led, ProgressBar, QMLWidget, Slider
+#from displays import Led, ProgressBar, QMLWidget, Slider
 
+
+class MdiSubWindow(QMdiSubWindow):
+	''' Custom QMdiSubWindow implementing 'hided' signal.
+	The default close event is overrided for hiding.
+	'''
+	
+	hided = QtCore.Signal()
+	
+	def __init__(self):
+		QMdiSubWindow.__init__(self)
+	
+	def closeEvent(self, event):
+		event.ignore()
+		self.hide()
+		self.hided.emit()
+	
 
 class MainWindow(QtGui.QMainWindow):
 	
@@ -24,45 +40,166 @@ class MainWindow(QtGui.QMainWindow):
 	
 	_layoutMatchString = r'(r(?P<row>\d+))?(c(?P<col>\d+))?(rs(?P<rowspan>\d+))?(cs(?P<colspan>\d+))?'
 	
+	mdiarea = None
+	functionalitiesMenu = None
+	signalMapper = None
+	
 	def __init__(self):
 		QMainWindow.__init__(self)
-		
-		self.mdiarea = QMdiArea()
-		
-		self.signalMapper = QSignalMapper()
-		self.signalMapper.mapped[QObject].connect(self.functionalityValueChanged)
 		
 		
 		self._serialCom = SerialCom()
 		self._serialCom.readyRead.connect(self._serialEvent)
+		#print('Found ports:', self._serialCom.ports())
 		
-		print('Found ports:', self._serialCom.ports())
+		self.createMenus()
 		
+		self.resize(800, 500)
 		
+		self.statusBar().showMessage('Open a robot configuration file...')
 		
+		#self.setDockNestingEnabled(True)
+	
+	
+	def commObject(self):
+		return self._serialCom
+	
+	def createMenus(self):
+		''' Create the app default menus '''
+		
+		fileMenu = self.menuBar().addMenu('&File')
+		openAct = fileMenu.addAction('&Open Robot...', None, QKeySequence.Open)
+		openAct.triggered.connect(self.openConfigFile)
+		
+		portSelectGroup = QActionGroup(self)
+		portsMenu = self.menuBar().addMenu('&Ports')
+		# Construct port list menu
+		for port in self.commObject().ports():
+			act = portsMenu.addAction(port.name)
+			act.setCheckable(True)
+			act.setToolTip(port.description)
+			portSelectGroup.addAction(act)
+			
+		portSelectGroup.triggered.connect(self._changePort)
+		
+		# Functionalitites menu
+		#self.createFunctionalitiesMenu()
+	
+	
+	def createSubWindowMenu(self):
+		''' Create a menu containing the subWindows list '''
+		
+		subwActGroup = QActionGroup(self)
+		subwActGroup.setExclusive(False)
+		
+		if not self.functionalitiesMenu:
+			self.functionalitiesMenu = self.menuBar().addMenu('&Functionalities')
+			
+		subwMenu = self.functionalitiesMenu
+		
+		# Create subwindows list actions
+		for subw in self.mdiarea.subWindowList():
+			act = subwMenu.addAction(subw.windowTitle())
+			act.setCheckable(True)
+			act.setChecked(True)
+			act.setData(subw)
+			subw.hided.connect(act.toggle)
+			subwActGroup.addAction(act)
+		
+		subwActGroup.triggered.connect(self._showSubWindow)
+		
+		subwMenu.addSeparator()
+		
+		# Add action to show all subwindows
+		self._subWindowsActions = subwActGroup.actions()
+		showall = subwMenu.addAction('Show All')
+		showall.triggered.connect(self._showAllSubWindows)
+	
+	
+	def openConfigFile(self):
+		''' Open a dialog to get robot configuration file name, and load it '''
+		
+		fileName = QFileDialog.getOpenFileName(self, 'Open robot config file', '', 'BotVisor Config Files (*.bvc)')
+		
+		if fileName:
+			print('Open file:', fileName)
+			self.loadRobot(fileName[0])
+	
+	
+	def loadRobot(self, configFileName):
+		''' Load a robot from configuration file '''
+		
+		self.clearRobot()
+		
+		self.mdiarea = QMdiArea()
+		self.setCentralWidget(self.mdiarea)
+		
+		self.signalMapper = QSignalMapper()
+		self.signalMapper.mapped[QObject].connect(self.functionalityValueChanged)
+		
+		# Load robot config file
 		bc = BotConfigParser()
-		data = bc.loadConfigFile('mybot1.bvc')
+		data, botData = bc.loadConfigFile(configFileName)
 		
-		#print(data)
+		self.setWindowTitle('BotVisor - ' + botData['name'])
 		
 		#print('All keys:', data.keys())
-		
 		#print(json.dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))
-		
+		fnum = 0
+		fnume = 0
 		for fuKeys in data:
 			#print(fuKeys)
 			#print(data[fuKeys].keys())
 			options = data[fuKeys]
 			if 'display' in options.keys():
 				self.loadFunctionality(fuKeys, options['display'], options)
+				fnum = fnum+1
 			else:
 				print('Error: functionality', fuKeys, 'not loaded')
-
+				fnume = fnume+1
 		
+		self.statusBar().showMessage('{} functionalities sucessfully loaded. {} failed.'.format(fnum, fnume), 6000)
 		
-		self.setCentralWidget(self.mdiarea)
-		self.setDockNestingEnabled(True)
+		self.createSubWindowMenu()
 	
+	
+	def clearRobot(self):
+		''' Clear window, to load a robot '''
+		
+		if self.mdiarea:
+			del self.mdiarea
+		
+		# Clear functionalities menu
+		if self.functionalitiesMenu:
+			self.functionalitiesMenu.clear()
+		
+		self._fids = {}
+		self._wgtgrp = {}
+		
+		# Reset signal mapper
+		if self.signalMapper:
+			del self.signalMapper
+		
+	
+	def _showSubWindow(self, action):
+		''' Show or hide a subWindow depending of action's state '''
+		if action.isChecked():
+			action.data().show()
+		else:
+			action.data().hide()
+	
+	def _showAllSubWindows(self):
+		''' Show all subWindows '''
+		for act in self._subWindowsActions:
+			act.data().show()
+			act.setChecked(True)
+	
+	
+	def _changePort(self, action):
+		''' Use new port '''
+		print('Change port:', action.text())
+		
+		self.statusBar().showMessage('Port changed for {}.'.format(action.text()), 6000)
 	
 	
 	def _serialEvent(self):
@@ -82,15 +219,16 @@ class MainWindow(QtGui.QMainWindow):
 					value = jsonObj[fid];
 					self._fids[fid].setValue(value)
 					
+					self.statusBar().showMessage('Value for {} received ({}).'.format(fid, value), 2000)
+	
 	
 	
 	def addSubWindow(self, widget, title):
 		''' Add a subwindow with title containing widget '''
-		newSubWin = QMdiSubWindow()
+		newSubWin = MdiSubWindow()
 		newSubWin.setWindowTitle(title)
 		self.mdiarea.addSubWindow(newSubWin)
 		newSubWin.setWidget(widget)
-		#subWindowList()
 		return widget
 	
 	def _addDockWidget(self, widget, title):
@@ -128,7 +266,7 @@ class MainWindow(QtGui.QMainWindow):
 		if 'name' in options:
 			name = options['name']
 		
-		print('Add display:', fid, '(' +display+ ')')
+		#print('Add display:', fid, '(' +display+ ')')
 		
 		# Load class instance
 		classInstance = loadClassFromModule('displays', display)
@@ -207,7 +345,7 @@ class MainWindow(QtGui.QMainWindow):
 			if row == None:
 				row,col = availableLayoutPosition(widget.layout(), 'r', (0, col))
 			
-			print('Layout: ', row, col, rowSpan, colSpan)
+			#print('Layout: ', row, col, rowSpan, colSpan)
 			
 			# Add the widget to the layout
 			widget.layout().addWidget(c, row, col, rowSpan, colSpan)
@@ -223,21 +361,20 @@ class MainWindow(QtGui.QMainWindow):
 	
 	def functionalityValueChanged(self, fobj):
 		''' Send functionality value over comm port '''
-		print('Value for', fobj.id(), ':', fobj.value())
+		#print('Value for', fobj.id(), ':', fobj.value())
 		jsonData = {fobj.id():fobj.value()}
 		#print(json.dumps(jsonData, sort_keys=True, indent=2, separators=(',', ': ')))
 		#self._serialCom.sendJSON(jsonData)
+		
+		self.statusBar().showMessage('Value for {} sent ({}).'.format(fobj.id(), fobj.value()), 2000)
 
 
 
 def main(args):
 	
-	
 	a = QtGui.QApplication(args)
 	
 	mainwindow = MainWindow()
-	
-	
 	mainwindow.show()
 	
 	r = a.exec_()

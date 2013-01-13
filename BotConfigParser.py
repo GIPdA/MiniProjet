@@ -18,8 +18,11 @@ class BotConfigParser:
 		# id type range display group
 		settings = QSettings(configFileName, QSettings.IniFormat);
 		
+		robotData = {}
+		
 		settings.beginGroup('robot')
 		botName = settings.value('name')
+		robotData['name'] = botName
 		print('Robot name:', botName)
 		settings.endGroup()
 		
@@ -41,7 +44,7 @@ class BotConfigParser:
 		settings.endGroup()
 		
 		#print(funcData)
-		return funcData
+		return funcData, robotData
 
 
 
@@ -50,13 +53,10 @@ def main(args):
 	a = QtGui.QApplication(args)
 	
 	bc = BotConfigParser()
-	
 	bc.loadConfigFile('mybot1.bvc')
-	
 	
 	#r = a.exec_()
 	return 0
-
 
 if __name__ == "__main__":
 	main(sys.argv)
