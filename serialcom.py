@@ -7,7 +7,7 @@ import serial
 from PySide import QtGui, QtCore
 from PySide.QtCore import *
 from PySide.QtGui import *
-import json
+import json, collections
 
 from portsListener import PortsListener
 from serialEvents import SerialEvents
@@ -101,7 +101,7 @@ class SerialCom(QObject):
 		#print('SerialCom: ', self._dataRead)
 		
 		while True:
-			match = re.search('^.*?(<(.*?)>)', self._dataRead)
+			match = re.search('^.*?(<({.*?})>)', self._dataRead)
 			
 			if match:
 				self._jsonList.append(match.group(2))
@@ -118,10 +118,12 @@ class SerialCom(QObject):
 		
 	
 	def readAllObjects(self):
+			
 		jsonObjects = []
 		for jsonStr in self._jsonList:
 			try:
-				data = json.loads(jsonStr)
+				data = json.loads(jsonStr, object_pairs_hook=collections.OrderedDict)
+				#print(data)
 				jsonObjects.append(data)
 			except:
 				# Loading fail
@@ -150,55 +152,4 @@ class SerialCom(QObject):
 			self.serial.write(bytes('<' + string + '>', _CODING_SERIAL))
 
 
-
-
-def main(args):
-	
-	def quit():
-		del sc
-	
-	def read():
-		print('>> Reading data ')
-		print(sc.readAllObjects()[0])
-		
-	
-	def send():
-		print('>> SEND ')
-		print(te_inputData.toPlainText())
-		sc.sendJSONStr(te_inputData.toPlainText())
-		
-		print(sc.ports())
-		
-	
-	
-	a = QtGui.QApplication(args)
-	
-	sc = SerialCom()
-	sc.connectPort('/dev/tty.usbserial-A6008cB6')
-	
-	sc.readyRead.connect(read)
-	
-	pb_connect = QPushButton('Send JSON data')
-	pb_connect.clicked.connect(send)
-	
-	te_inputData = QTextEdit()
-	te_inputData.setPlainText('''{'musiques': ['Best Improvisation Ever 2', 'My Theory\n (Bonus)'], 'nom': 'MeshowRandom'}'''.replace("'", '"'))
-	
-	
-	window = QWidget()
-	layout = QVBoxLayout(window)
-	
-	layout.addWidget(te_inputData)
-	layout.addWidget(pb_connect)
-	
-	window.show()
-	
-	r = a.exec_()
-	#quit()
-	del sc
-	return r
-
-
-if __name__ == "__main__":
-	main(sys.argv)
 	

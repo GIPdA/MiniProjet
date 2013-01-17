@@ -13,6 +13,7 @@ from serialCom import SerialCom
 import time
 
 from BotConfigParser import BotConfigParser
+from collections import OrderedDict
 import importlib
 #from displays import Led, ProgressBar, QMLWidget, Slider
 
@@ -143,14 +144,33 @@ class MainWindow(QtGui.QMainWindow):
 		if fileName:
 			print('Open file:', fileName)
 			self.setCurrentFile(fileName)
-			self.loadRobot(fileName)
+			self.loadRobotFromConfigFile(fileName)
 	
 	def openRecentFile(self):
 		''' Called by recent files actions '''
 		self.openConfigFile(self.sender().data())
+	
+	
+	def loadRobotFromConfigFile(self, configFileName):
+		''' Load a robot from configuration file '''
+		
+		# Load robot config file
+		bc = BotConfigParser()
+		data, botData = bc.loadConfigFile(configFileName)
+		
+		fullData = OrderedDict()
+		fullData['__CONFIGURATION__'] = OrderedDict()
+		fullData['__CONFIGURATION__']['robot'] = botData
+		fullData['__CONFIGURATION__']['functionalities'] = data
+		
+		print('>> Send JSON data')
+		self._serialCom.sendJSON(fullData)
+		
+		# self.loadRobot(botData, data)
+		
 		
 	
-	def loadRobot(self, configFileName):
+	def loadRobot(self, botData, functionalitiesData):
 		''' Load a robot from configuration file '''
 		
 		self.clearRobot()
@@ -161,20 +181,18 @@ class MainWindow(QtGui.QMainWindow):
 		self.signalMapper = QSignalMapper()
 		self.signalMapper.mapped[QObject].connect(self.functionalityValueChanged)
 		
-		# Load robot config file
-		bc = BotConfigParser()
-		data, botData = bc.loadConfigFile(configFileName)
 		
 		self.setWindowTitle('BotVisor - ' + botData['name'])
+
 		
-		#print('All keys:', data.keys())
-		#print(json.dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))
+		#print('All keys:', functionalitiesData.keys())
+		#print(json.dumps(functionalitiesData, sort_keys=True, indent=2, separators=(',', ': ')))
 		fnum = 0
 		fnume = 0
-		for fuKeys in data:
+		for fuKeys in functionalitiesData:
 			#print(fuKeys)
-			#print(data[fuKeys].keys())
-			options = data[fuKeys]
+			#print(functionalitiesData[fuKeys].keys())
+			options = functionalitiesData[fuKeys]
 			if 'display' in options.keys():
 				self.loadFunctionality(fuKeys, options['display'], options)
 				fnum = fnum+1
@@ -240,6 +258,10 @@ class MainWindow(QtGui.QMainWindow):
 		for jsonObj in jsonObjs:
 			#print(json.dumps(jsonObj, sort_keys=True, indent=2, separators=(',', ': ')))
 			
+			if '__CONFIGURATION__' in jsonObj.keys():
+				print('>> Streamed config file received')
+				self.loadStreamedConfig(jsonObj['__CONFIGURATION__'])
+			
 			# Loop over all keys
 			for fid in jsonObj:
 				# Check if key is in stored functionalities
@@ -251,6 +273,18 @@ class MainWindow(QtGui.QMainWindow):
 					
 					self.statusBar().showMessage('Value for {} received ({}).'.format(fid, value), 2000)
 	
+	
+	def loadStreamedConfig(self, jsonData):
+			
+			
+		if 'robot' not in jsonData or 'functionalities' not in jsonData:
+			print('Streamed config file seems invalid ! (no functionalities in)')
+			self.statusBar().showMessage('Streamed config file loading failed !', 6000)
+			return
+		
+		self.loadRobot(jsonData['robot'], jsonData['functionalities'])
+		
+		self.statusBar().showMessage('Streamed config file loaded !', 6000)
 	
 	
 	def addSubWindow(self, widget, title):

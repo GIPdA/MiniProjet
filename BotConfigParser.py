@@ -43,7 +43,7 @@ class BotConfigParser:
 			settings.endGroup()
 		settings.endGroup()
 		
-		#print(funcData)
+		#print(json.dumps(funcData, sort_keys=True, indent=2, separators=(',', ': ')))
 		return funcData, robotData
 
 
