@@ -158,15 +158,15 @@ class MainWindow(QtGui.QMainWindow):
 		bc = BotConfigParser()
 		data, botData = bc.loadConfigFile(configFileName)
 		
-		fullData = OrderedDict()
-		fullData['__CONFIGURATION__'] = OrderedDict()
-		fullData['__CONFIGURATION__']['robot'] = botData
-		fullData['__CONFIGURATION__']['functionalities'] = data
+		# fullData = OrderedDict()
+		# fullData['__CONFIGURATION__'] = OrderedDict()
+		# fullData['__CONFIGURATION__']['robot'] = botData
+		# fullData['__CONFIGURATION__']['functionalities'] = data
 		
-		print('>> Send JSON data')
-		self._serialCom.sendJSON(fullData)
+		# print('>> Send JSON data')
+		# self._serialCom.sendJSON(fullData)
 		
-		# self.loadRobot(botData, data)
+		self.loadRobot(botData, data)
 		
 		
 	

@@ -41,10 +41,14 @@ class Functionality(QtCore.QObject):
 		return self._id
 	
 	
-	def setValue(self, value):
-		''' Set internal functionality's value '''
+	def setValue(self, value, emitChange=True):
+		''' Set internal functionality's value
+		and emit signal if 'emitChange' is true.
+		'''
 		self._value = value
-		self.valueChanged.emit(self._value)
+		
+		if emitChange:
+			self.valueChanged.emit(self._value)
 	
 	def value(self):
 		''' Functionality's value '''

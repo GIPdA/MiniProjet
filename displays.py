@@ -55,16 +55,19 @@ class Led(Display):
 	
 	
 	def _ledStateChanged(self, state):
-		self.setValue(state)
+		self.setValue(state, _emitChange=True)	# Emit valueChanged signal
 	
-	def setValue(self, value):
+	def setValue(self, value, _emitChange=False):
 		''' Reimplement setValue to update the radio button.
 		Raise TypeError if value not a bool.
 		'''
-		Display.setValue(self, value)
+		Display.setValue(self, value, _emitChange)
 		
 		if isinstance(value, bool):
-			self.widget().setChecked(value)
+			if not _emitChange:	# If not called from _ledStateChanged
+				self.widget().blockSignals(True)
+				self.widget().setChecked(value)
+				self.widget().blockSignals(False)
 		else:
 			raise TypeError
 
@@ -106,7 +109,7 @@ class ProgressBar(Display):
 		''' Reimplement setValue to update the progress bar.
 		Raise TypeError if value not a int.
 		'''
-		Display.setValue(self, value)
+		Display.setValue(self, value, emitChange=False)
 		
 		if isinstance(value, int):
 			self.widget().setValue(value)
@@ -137,7 +140,6 @@ class Slider(Display):
 			self.setValueRange(valueRange)
 		
 		sld = QtGui.QSlider()
-		sld.valueChanged.connect(self._sliderValueChanged)
 		
 		self.setWidget(sld)
 		
@@ -148,6 +150,9 @@ class Slider(Display):
 		
 		sld.setMinimum(self.valueRange()['min'])
 		sld.setMaximum(self.valueRange()['max'])
+		
+		# Connection
+		sld.valueChanged.connect(self._sliderValueChanged)
 		
 		# Add text before or after
 		if valueFormatting:	# ex. 'The value: {0}'
@@ -163,16 +168,19 @@ class Slider(Display):
 	
 	def _sliderValueChanged(self, value):
 		''' Slider value changed (by user), update internal functionality's value '''
-		self.setValue(value)
+		self.setValue(value, _emitChange=True)
 	
-	def setValue(self, value):
+	def setValue(self, value, _emitChange=False):
 		''' Reimplement setValue to update the slider.
 		Raise TypeError if value not a int.
 		'''
-		Display.setValue(self, value)
+		Display.setValue(self, value, _emitChange)
 		
 		if isinstance(value, int):
-			self.widget().setValue(value)
+			if not _emitChange:	# If not called from _sliderValueChanged
+				self.widget().blockSignals(True)
+				self.widget().setValue(value)
+				self.widget().blockSignals(False)
 			if hasattr(self, '_textValue'):
 				self._textValue.setText(self._valueFormatting.format(value))
 		else:
@@ -200,7 +208,6 @@ class Dial(Display):
 			self.setValueRange(valueRange)
 		
 		dial = QtGui.QDial()
-		dial.valueChanged.connect(self._dialValueChanged)
 		
 		self.setWidget(dial)
 		
@@ -211,6 +218,9 @@ class Dial(Display):
 		
 		dial.setMinimum(self.valueRange()['min'])
 		dial.setMaximum(self.valueRange()['max'])
+		
+		# Connection
+		dial.valueChanged.connect(self._dialValueChanged)
 		
 		# Add text before or after
 		if valueFormatting:	# ex. 'The value: {0}'
@@ -227,16 +237,19 @@ class Dial(Display):
 	
 	def _dialValueChanged(self, value):
 		''' Dial value changed (by user), update internal functionality's value '''
-		self.setValue(value)
+		self.setValue(value, _emitChange=True)
 	
-	def setValue(self, value):
+	def setValue(self, value, _emitChange=False):
 		''' Reimplement setValue to update the dial.
 		Raise TypeError if value not a int.
 		'''
-		Display.setValue(self, value)
+		Display.setValue(self, value, _emitChange)
 		
 		if isinstance(value, int):
-			self.widget().setValue(value)
+			if not _emitChange:	# If not called from _dialValueChanged
+				self.widget().blockSignals(True)
+				self.widget().setValue(value)
+				self.widget().blockSignals(False)
 			if hasattr(self, '_textValue'):
 				self._textValue.setText(self._valueFormatting.format(value))
 		else:
@@ -264,7 +277,6 @@ class Alphanum(Display):
 		Display.__init__(self, displayID, friendlyName)
 		
 		te = QTextEdit()
-		te.textChanged.connect(self._textChanged)
 		
 		self.setWidget(te)
 		self.widget().setMaximumHeight(60)
@@ -273,6 +285,9 @@ class Alphanum(Display):
 		
 		self._wordCount = QLabel()
 		self._vbx.addWidget(self._wordCount, 2, 1)
+		
+		# Connection
+		te.textChanged.connect(self._textChanged)
 	
 	
 	def _textChanged(self):
@@ -284,10 +299,12 @@ class Alphanum(Display):
 		''' Reimplement setValue to update the dial.
 		Raise TypeError if value not a int.
 		'''
-		Display.setValue(self, value)
+		Display.setValue(self, value, emitChange=False)
 		
 		if isinstance(value, str):
+			self.widget().blockSignals(True)
 			self.widget().setText(value)
+			self.widget().blockSignals(False)
 		else:
 			raise TypeError('"str" is the only type allowed.')
 
