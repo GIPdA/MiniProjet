@@ -17,7 +17,7 @@ led3\display=Led
 led3\group=0
 led3\layout=r2
 
-p1\display=ProgressBar
+p1\display=Slider
 p1\group=0
 p1\layout=r0c0cs2
 p2\display=Slider
@@ -50,6 +50,7 @@ l8\display=Led
 l8\group=1
 
 lr1\display=Led
+lr1\name=Led 1
 lr1\group=2
 lr1\layout=r0
 lr2\display=Led

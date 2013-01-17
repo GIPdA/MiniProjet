@@ -65,7 +65,6 @@ class SerialCom(QObject):
 	def __del__(self):
 		self._serialEv.stop()
 		self.serial.close()
-		pass
 	
 	
 	def ports(self):
@@ -78,11 +77,17 @@ class SerialCom(QObject):
 	def connectPort(self, portName):
 		if self._verbose > 1:
 			print('Opening serial port... (%s)' % portName)
+			
+		if self.serial.isOpen():
+			self.disconnectPort()
 		
 		if not self.serial.isOpen():
 			self.serial.port = portName
 			self.serial.open()
+			self.serial.flushInput()	# Flush buffer
+			self.serial.flushOutput()
 			self._serialEv.start()
+			
 	
 	@QtCore.Slot()
 	def disconnectPort(self):
@@ -93,7 +98,7 @@ class SerialCom(QObject):
 		
 	def _readSerial(self):
 		self._dataRead += self._serialEv.readAll().decode(_CODING_SERIAL)
-		#print('>', self._dataRead)
+		#print('SerialCom: ', self._dataRead)
 		
 		while True:
 			match = re.search('^.*?(<(.*?)>)', self._dataRead)

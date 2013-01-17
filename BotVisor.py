@@ -31,7 +31,9 @@ class MdiSubWindow(QMdiSubWindow):
 		event.ignore()
 		self.hide()
 		self.hided.emit()
-	
+
+def fullPath(path):
+	return os.path.dirname(__file__) + '/' + path
 
 class MainWindow(QtGui.QMainWindow):
 	
@@ -47,9 +49,11 @@ class MainWindow(QtGui.QMainWindow):
 	def __init__(self):
 		QMainWindow.__init__(self)
 		
+		self.loadSettings()
+		#self.saveSettings()
 		
 		self._serialCom = SerialCom()
-		self._serialCom.readyRead.connect(self._serialEvent)
+		self._serialCom.readyRead.connect(self.serialEvent)
 		#print('Found ports:', self._serialCom.ports())
 		
 		self.createMenus()
@@ -57,6 +61,9 @@ class MainWindow(QtGui.QMainWindow):
 		self.resize(800, 500)
 		
 		self.statusBar().showMessage('Open a robot configuration file...')
+		
+		if self.recentFilesActs[0].data():
+			self.recentFilesActs[0].triggered.emit()
 		
 		#self.setDockNestingEnabled(True)
 	
@@ -71,6 +78,19 @@ class MainWindow(QtGui.QMainWindow):
 		openAct = fileMenu.addAction('&Open Robot...', None, QKeySequence.Open)
 		openAct.triggered.connect(self.openConfigFile)
 		
+		self.rfSeparatorAct = fileMenu.addSeparator()
+		
+		self.recentFilesActs = []
+		for i in range(0, self.MaxRecentFiles):
+			act = QAction(self)
+			self.recentFilesActs.append(act)
+			act.setVisible(False)
+			act.triggered.connect(self.openRecentFile)
+			
+			fileMenu.addAction(act)
+		
+		self.updateRecentFilesActions()
+		
 		portSelectGroup = QActionGroup(self)
 		portsMenu = self.menuBar().addMenu('&Ports')
 		# Construct port list menu
@@ -80,13 +100,10 @@ class MainWindow(QtGui.QMainWindow):
 			act.setToolTip(port.description)
 			portSelectGroup.addAction(act)
 			
-		portSelectGroup.triggered.connect(self._changePort)
-		
-		# Functionalitites menu
-		#self.createFunctionalitiesMenu()
+		portSelectGroup.triggered.connect(self.changePort)
 	
 	
-	def createSubWindowMenu(self):
+	def createSubWindowMenus(self):
 		''' Create a menu containing the subWindows list '''
 		
 		subwActGroup = QActionGroup(self)
@@ -106,25 +123,32 @@ class MainWindow(QtGui.QMainWindow):
 			subw.hided.connect(act.toggle)
 			subwActGroup.addAction(act)
 		
-		subwActGroup.triggered.connect(self._showSubWindow)
+		subwActGroup.triggered.connect(self.showSubWindow)
 		
 		subwMenu.addSeparator()
 		
 		# Add action to show all subwindows
 		self._subWindowsActions = subwActGroup.actions()
 		showall = subwMenu.addAction('Show All')
-		showall.triggered.connect(self._showAllSubWindows)
+		showall.triggered.connect(self.showAllSubWindows)
 	
 	
-	def openConfigFile(self):
+	def openConfigFile(self, fileName = None):
 		''' Open a dialog to get robot configuration file name, and load it '''
 		
-		fileName = QFileDialog.getOpenFileName(self, 'Open robot config file', '', 'BotVisor Config Files (*.bvc)')
+		if not fileName:
+			fileName = QFileDialog.getOpenFileName(self, 'Open robot config file', '', 'BotVisor Config Files (*.bvc)')
+			if fileName: fileName = fileName[0]
 		
 		if fileName:
 			print('Open file:', fileName)
-			self.loadRobot(fileName[0])
+			self.setCurrentFile(fileName)
+			self.loadRobot(fileName)
 	
+	def openRecentFile(self):
+		''' Called by recent files actions '''
+		self.openConfigFile(self.sender().data())
+		
 	
 	def loadRobot(self, configFileName):
 		''' Load a robot from configuration file '''
@@ -160,7 +184,7 @@ class MainWindow(QtGui.QMainWindow):
 		
 		self.statusBar().showMessage('{} functionalities sucessfully loaded. {} failed.'.format(fnum, fnume), 6000)
 		
-		self.createSubWindowMenu()
+		self.createSubWindowMenus()
 	
 	
 	def clearRobot(self):
@@ -181,35 +205,40 @@ class MainWindow(QtGui.QMainWindow):
 			del self.signalMapper
 		
 	
-	def _showSubWindow(self, action):
+	def showSubWindow(self, action):
 		''' Show or hide a subWindow depending of action's state '''
 		if action.isChecked():
 			action.data().show()
 		else:
 			action.data().hide()
 	
-	def _showAllSubWindows(self):
+	def showAllSubWindows(self):
 		''' Show all subWindows '''
 		for act in self._subWindowsActions:
 			act.data().show()
 			act.setChecked(True)
 	
 	
-	def _changePort(self, action):
+	def changePort(self, action):
 		''' Use new port '''
-		print('Change port:', action.text())
+		#print('Change port:', action.text())
 		
-		self.statusBar().showMessage('Port changed for {}.'.format(action.text()), 6000)
+		if self._serialCom.serial.isOpen():
+			print('Disconnect from ' + self._serialCom.serial.name)
+		
+		self._serialCom.connectPort(action.text())
+		
+		self.statusBar().showMessage('{} connected.'.format(action.text()), 6000)
 	
 	
-	def _serialEvent(self):
+	def serialEvent(self):
 		''' JSON objects received '''
 		
 		jsonObjs = self._serialCom.readAllObjects()
 		
 		print('\nJSON data received:')
 		for jsonObj in jsonObjs:
-			print(json.dumps(jsonObj, sort_keys=True, indent=2, separators=(',', ': ')))
+			#print(json.dumps(jsonObj, sort_keys=True, indent=2, separators=(',', ': ')))
 			
 			# Loop over all keys
 			for fid in jsonObj:
@@ -218,6 +247,7 @@ class MainWindow(QtGui.QMainWindow):
 					# Update value
 					value = jsonObj[fid];
 					self._fids[fid].setValue(value)
+					print('Value: ', value, 'for display ', fid)
 					
 					self.statusBar().showMessage('Value for {} received ({}).'.format(fid, value), 2000)
 	
@@ -231,7 +261,7 @@ class MainWindow(QtGui.QMainWindow):
 		newSubWin.setWidget(widget)
 		return widget
 	
-	def _addDockWidget(self, widget, title):
+	def addDockWidget(self, widget, title):
 		''' Add a dock with title containing widget '''
 		newDock = QDockWidget(title)
 		newDock.setWidget(widget)
@@ -356,7 +386,7 @@ class MainWindow(QtGui.QMainWindow):
 		# Create new subwindow if needed
 		if newsw:
 			self.addSubWindow(widget, name)
-			#self._addDockWidget(widget, name)
+			#self.addDockWidget(widget, name)
 	
 	
 	def functionalityValueChanged(self, fobj):
@@ -364,10 +394,78 @@ class MainWindow(QtGui.QMainWindow):
 		#print('Value for', fobj.id(), ':', fobj.value())
 		jsonData = {fobj.id():fobj.value()}
 		#print(json.dumps(jsonData, sort_keys=True, indent=2, separators=(',', ': ')))
-		#self._serialCom.sendJSON(jsonData)
+		self._serialCom.sendJSON(jsonData)
 		
 		self.statusBar().showMessage('Value for {} sent ({}).'.format(fobj.id(), fobj.value()), 2000)
 
+
+	def recentFilesList(self):
+		''' Get recent files list from settings file '''
+		se = QSettings(fullPath('BotVisor.conf'), QSettings.IniFormat)
+		files = se.value('recentfiles', [])
+		
+		if isinstance(files, str):
+			return [files]
+		#if isinstance(files, list):
+		#	return files
+		return files
+	
+	
+	def updateRecentFilesActions(self):
+		''' Update recent files menu actions '''
+		recentFiles = self.recentFilesList()
+		
+		numRecentFiles = min(len(recentFiles), self.MaxRecentFiles)
+		
+		for i in range(0, numRecentFiles):
+			self.recentFilesActs[i].setText(QFileInfo(recentFiles[i]).fileName())
+			self.recentFilesActs[i].setData(recentFiles[i])
+			self.recentFilesActs[i].setVisible(True)
+		
+		for i in range(numRecentFiles, self.MaxRecentFiles):
+			self.recentFilesActs[i].setVisible(False)
+		
+		self.rfSeparatorAct.setVisible(numRecentFiles > 0)
+		
+	
+	def setCurrentFile(self, fileName):
+		''' Update recent files '''
+		recentFiles = self.recentFilesList()
+		
+		# Remove occurences of fileName
+		while recentFiles.count(fileName):
+			recentFiles.remove(fileName)
+		
+		# Prepend file
+		recentFiles.insert(0, fileName)
+		
+		# Remove old files
+		if len(recentFiles) > self.MaxRecentFiles:
+			recentFiles = recentFiles[self.MaxRecentFiles:]
+		
+		# Save recent files list
+		se = QSettings(fullPath('BotVisor.conf'), QSettings.IniFormat)
+		se.setValue('recentfiles', recentFiles)
+		
+		self.updateRecentFilesActions()
+		
+	
+	def loadSettings(self):
+		''' Load settings '''
+		se = QSettings(fullPath('BotVisor.conf'), QSettings.IniFormat)
+		
+		#recentFiles = se.value('recentfiles')
+		self.MaxRecentFiles = int(se.value('maxrecentfiles', 10))
+		
+		
+	def saveSettings(self):
+		''' Save settings '''
+		#se = QSettings(fullPath('BotVisor.conf'), QSettings.IniFormat)
+		pass
+	
+	def closeEvent(self, event):
+		self._serialCom.disconnectPort()
+		event.accept()
 
 
 def main(args):
@@ -376,6 +474,8 @@ def main(args):
 	
 	mainwindow = MainWindow()
 	mainwindow.show()
+	
+	#mainwindow.setFocus(Qt.MouseFocusReason)
 	
 	r = a.exec_()
 	return r

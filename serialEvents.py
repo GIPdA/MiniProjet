@@ -50,6 +50,8 @@ class SerialEvents(QObject, threading.Thread):
 		
 		if self.verbose:
 			print('Entering Serial events loop...')
+		
+		self._stopEvent.clear()
 			
 		while not self._stopEvent.isSet():
 			# Check if data in buffer
@@ -77,5 +79,3 @@ class SerialEvents(QObject, threading.Thread):
 			print('SerialEvents thread exited')
 
 
-if __name__ == "__main__":
-	pass
