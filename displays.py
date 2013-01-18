@@ -232,7 +232,9 @@ class Dial(Display):
 			else:
 				self._vbx.addWidget(self._textValue, 1, 2)
 			
+			self.widget().blockSignals(True)
 			self.setValue(0)
+			self.widget().blockSignals(False)
 	
 	
 	def _dialValueChanged(self, value):

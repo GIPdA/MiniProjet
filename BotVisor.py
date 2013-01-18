@@ -47,6 +47,7 @@ class MainWindow(QtGui.QMainWindow):
 	functionalitiesMenu = None
 	signalMapper = None
 	
+	
 	def __init__(self):
 		QMainWindow.__init__(self)
 		
@@ -137,6 +138,8 @@ class MainWindow(QtGui.QMainWindow):
 	def openConfigFile(self, fileName = None):
 		''' Open a dialog to get robot configuration file name, and load it '''
 		
+		stream = QApplication.keyboardModifiers() == Qt.ControlModifier
+		
 		if not fileName:
 			fileName = QFileDialog.getOpenFileName(self, 'Open robot config file', '', 'BotVisor Config Files (*.bvc)')
 			if fileName: fileName = fileName[0]
@@ -144,7 +147,11 @@ class MainWindow(QtGui.QMainWindow):
 		if fileName:
 			print('Open file:', fileName)
 			self.setCurrentFile(fileName)
-			self.loadRobotFromConfigFile(fileName)
+			
+			if not stream:
+				self.loadRobotFromConfigFile(fileName)
+			else:
+				self.streamRobotConfigFile(fileName)
 	
 	def openRecentFile(self):
 		''' Called by recent files actions '''
@@ -168,7 +175,22 @@ class MainWindow(QtGui.QMainWindow):
 		
 		self.loadRobot(botData, data)
 		
+	
+	def streamRobotConfigFile(self, configFileName):
+		''' Stream a robot configuration file through com port '''
 		
+		# Load robot config file
+		bc = BotConfigParser()
+		data, botData = bc.loadConfigFile(configFileName)
+		
+		fullData = OrderedDict()
+		fullData['__CONFIGURATION__'] = OrderedDict()
+		fullData['__CONFIGURATION__']['robot'] = botData
+		fullData['__CONFIGURATION__']['functionalities'] = data
+		
+		print('>> Stream config file')
+		self._serialCom.sendJSON(fullData)
+	
 	
 	def loadRobot(self, botData, functionalitiesData):
 		''' Load a robot from configuration file '''
@@ -275,7 +297,7 @@ class MainWindow(QtGui.QMainWindow):
 	
 	
 	def loadStreamedConfig(self, jsonData):
-			
+		''' Load a config file streamed by a robot through com port '''
 			
 		if 'robot' not in jsonData or 'functionalities' not in jsonData:
 			print('Streamed config file seems invalid ! (no functionalities in)')
