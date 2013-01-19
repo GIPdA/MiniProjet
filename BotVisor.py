@@ -47,6 +47,7 @@ class MainWindow(QtGui.QMainWindow):
 	functionalitiesMenu = None
 	signalMapper = None
 	
+	lastComPort = None
 	
 	def __init__(self):
 		QMainWindow.__init__(self)
@@ -66,6 +67,11 @@ class MainWindow(QtGui.QMainWindow):
 		
 		#if self.recentFilesActs[0].data():
 		#	self.recentFilesActs[0].triggered.emit()
+		
+		# Open last port if possible
+		if self.lastComPort:
+			if self.lastComPort in self.commObject().portNames():
+				self.changeComPort(self.lastComPort)
 		
 		#self.setDockNestingEnabled(True)
 	
@@ -93,16 +99,17 @@ class MainWindow(QtGui.QMainWindow):
 		
 		self.updateRecentFilesActions()
 		
+		# Add com ports
 		portSelectGroup = QActionGroup(self)
-		portsMenu = self.menuBar().addMenu('&Ports')
+		self.portsMenu = self.menuBar().addMenu('&Ports')
 		# Construct port list menu
 		for port in self.commObject().ports():
-			act = portsMenu.addAction(port.name)
+			act = self.portsMenu.addAction(port.name)
 			act.setCheckable(True)
 			act.setToolTip(port.description)
 			portSelectGroup.addAction(act)
 			
-		portSelectGroup.triggered.connect(self.changePort)
+		portSelectGroup.triggered.connect(self._changePort)
 	
 	
 	def createSubWindowMenus(self):
@@ -259,16 +266,32 @@ class MainWindow(QtGui.QMainWindow):
 			act.setChecked(True)
 	
 	
-	def changePort(self, action):
+	def _changePort(self, action):
 		''' Use new port '''
 		#print('Change port:', action.text())
 		
-		if self._serialCom.serial.isOpen():
-			print('Disconnect from ' + self._serialCom.serial.name)
+		self.changeComPort(action.text())
 		
-		self._serialCom.connectPort(action.text())
+	
+	def changeComPort(self, portName):
+		''' Try to connect to 'portName' '''
 		
-		self.statusBar().showMessage('{} connected.'.format(action.text()), 6000)
+		if self.commObject().isConnected():
+			print('Disconnect from', self.commObject().portName())
+		
+		if not self.commObject().connectPort(portName):
+			self.statusBar().showMessage('Unable to connect {}.'.format(portName), 6000)
+			return
+		
+		# Update last port
+		self.lastComPort = portName
+		
+		# Check menu action for current port
+		for act in self.portsMenu.actions():
+			if act.text() == portName:
+				act.setChecked(True)
+		
+		self.statusBar().showMessage('{} connected.'.format(portName), 6000)
 	
 	
 	def serialEvent(self):
@@ -520,13 +543,23 @@ class MainWindow(QtGui.QMainWindow):
 		#recentFiles = se.value('recentfiles')
 		self.MaxRecentFiles = int(se.value('maxrecentfiles', 10))
 		
+		se.beginGroup('commport')
+		self.lastComPort = se.value('lastport', '')
+		se.endGroup()
+		
 		
 	def saveSettings(self):
 		''' Save settings '''
-		#se = QSettings(fullPath('BotVisor.conf'), QSettings.IniFormat)
-		pass
+		se = QSettings(fullPath('BotVisor.conf'), QSettings.IniFormat)
+		
+		se.beginGroup('commport')
+		se.setValue('lastport', self.lastComPort)
+		se.endGroup()
 	
 	def closeEvent(self, event):
+		''' App closing request '''
+		self.saveSettings()
+		
 		self._serialCom.disconnectPort()
 		event.accept()
 
