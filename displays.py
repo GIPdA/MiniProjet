@@ -23,6 +23,7 @@ class Display(Functionality, QWidget):
 		# Create empty layout
 		self._vbx = QtGui.QGridLayout(self)
 		self._vbx.setContentsMargins(0, 0, 0, 0)
+		self._vbx.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 		
 		self.setID(displayID)
 		self.name = friendlyName
@@ -95,6 +96,7 @@ class ProgressBar(Display):
 		# Add text before or after
 		if valueFormatting:	# ex. 'The value: {0}'
 			self._textValue = QLabel()
+			self._textValue.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 			self._valueFormatting = valueFormatting
 			
 			if 'vertical' in data and not data['vertical']:
@@ -163,6 +165,7 @@ class Slider(Display):
 		# Add text before or after
 		if valueFormatting:	# ex. 'The value: {0}'
 			self._textValue = QLabel()
+			self._textValue.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 			self._valueFormatting = valueFormatting
 			
 			if 'vertical' in data and not data['vertical']:
@@ -238,6 +241,7 @@ class Dial(Display):
 		# Add text before or after
 		if valueFormatting:	# ex. 'The value: {0}'
 			self._textValue = QLabel()
+			self._textValue.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 			self._valueFormatting = valueFormatting
 			
 			if 'vertical' in data and not data['vertical']:
