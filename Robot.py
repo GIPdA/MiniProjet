@@ -31,6 +31,8 @@ class MainWindow(QtGui.QMainWindow):
 	functionalitiesMenu = None
 	signalMapper = None
 	
+	lastComPort = None
+	
 	configStream = '''{'__CONFIGURATION__':{'robot':{'name':'Wulka Bot'}, 'functionalities':{
 	'sens_fl2':{'display':'Led', 'group':1, 'layout':'r0', 'disable':true},
 	'sens_fl1':{'display':'Led', 'group':1, 'layout':'r0', 'disable':true},
@@ -50,8 +52,8 @@ class MainWindow(QtGui.QMainWindow):
 	'sfr1_value':{'display':'ProgressBar', 'group':4, 'layout':'r0', 'data':{'vertical':true}},
 	'sfr2_value':{'display':'ProgressBar', 'group':4, 'layout':'r0', 'data':{'vertical':true}},
 	
-	'srr1_value':{'display':'ProgressBar', 'group':5, 'layout':'r0', 'data':{'vertical':true}},
 	'srl1_value':{'display':'ProgressBar', 'group':5, 'layout':'r0', 'data':{'vertical':true}},
+	'srr1_value':{'display':'ProgressBar', 'group':5, 'layout':'r0', 'data':{'vertical':true}},
 	
 	'robotDirWheelRotation':{'display':'Dial', 'data':{'range':[0, 360], 'vertical':true}}
 	}}}'''
@@ -59,6 +61,7 @@ class MainWindow(QtGui.QMainWindow):
 	def __init__(self):
 		QMainWindow.__init__(self)
 		
+		self.loadSettings()
 		
 		self._serialCom = SerialCom()
 		self._serialCom.readyRead.connect(self.serialEvent)
@@ -71,6 +74,7 @@ class MainWindow(QtGui.QMainWindow):
 		widget = QWidget()
 		
 		lyt = QGridLayout(widget)
+		lyt.setContentsMargins(0, 0, 0, 0)
 		lyt.addWidget(view, 0, 0)
 		
 		self.setCentralWidget(widget)
@@ -114,10 +118,10 @@ class MainWindow(QtGui.QMainWindow):
 		v = self.root.findChild(QtCore.QObject,"sfr2_value")
 		v.progressValueChanged.connect(self.sensorValueChanged)
 		
-		v = self.root.findChild(QtCore.QObject,"srr1_value")
+		v = self.root.findChild(QtCore.QObject,"srl1_value")
 		v.progressValueChanged.connect(self.sensorValueChanged)
 		
-		v = self.root.findChild(QtCore.QObject,"srl1_value")
+		v = self.root.findChild(QtCore.QObject,"srr1_value")
 		v.progressValueChanged.connect(self.sensorValueChanged)
 		
 		
@@ -145,12 +149,20 @@ class MainWindow(QtGui.QMainWindow):
 		
 		
 		self.resize(600, 550)
+		self.setFixedHeight(550)
+		self.setFixedWidth(600)
 		
 		# self.setSpeed_LeftWheel(-50)
 		# self.setSpeed_LeftWheel(50)
 		# self.setSpeed_RightWheel(50)
 		
-		#self.statusBar().showMessage('Open a robot configuration file...')
+		self.statusBar().showMessage('Choose a port to stream configuration')
+
+		# Open last port if possible
+		if self.lastComPort:
+			if self.lastComPort in self.commObject().portNames():
+				print('>> Loading saved port config:', self.lastComPort)
+				self.changeComPort(self.lastComPort)
 	
 	
 	def moveDirWheel(self, value):
@@ -185,38 +197,69 @@ class MainWindow(QtGui.QMainWindow):
 		''' Create the app default menus '''
 		
 		portSelectGroup = QActionGroup(self)
-		portsMenu = self.menuBar().addMenu('&Ports')
+		self.portsMenu = self.menuBar().addMenu('&Ports')
 		# Construct port list menu
 		for port in self.commObject().ports():
-			act = portsMenu.addAction(port.name)
+			act = self.portsMenu.addAction(port.name)
 			act.setCheckable(True)
 			act.setToolTip(port.description)
 			portSelectGroup.addAction(act)
 			
-		portSelectGroup.triggered.connect(self.changePort)
+		portSelectGroup.triggered.connect(self._changePort)
+		
+		configMenu = self.menuBar().addMenu('&Configuration')
+		streamAct = configMenu.addAction('&Stream configuration')
+		streamAct.triggered.connect(self.streamConfiguration)
 	
 	
+	def streamConfiguration(self):
+		
+		if not self.commObject().isConnected():
+			print('Port unconnected, unable to stream data.')
+			self.statusBar().showMessage('Open a port to stream data!', 6000)
+			#return
+		
+		print('>> Stream config file')
+		
+		data = json.loads(self.configStream.replace("'", '"'), object_pairs_hook=OrderedDict)
+		#print(json.dumps(data, sort_keys=False, indent=2, separators=(',', ': ')))
+		
+		if self.commObject().sendJSON(data):
+			self.statusBar().showMessage('Configuration streamed!', 6000)
+		else:
+			self.statusBar().showMessage('Error: data not sent', 6000)
 	
-	def changePort(self, action):
+	
+	def _changePort(self, action):
 		''' Use new port '''
 		#print('Change port:', action.text())
 		
-		if self._serialCom.serial.isOpen():
-			print('Disconnect from ' + self._serialCom.serial.name)
-		
-		self.commObject().connectPort(action.text())
-		
-		#self.configStream.replace("'", '"')
-		
-		data = json.loads(self.configStream.replace("'", '"'), object_pairs_hook=OrderedDict)
-		#print(data)
-		#print(json.dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))
-		
-		print('>> Stream config file')
-		self._serialCom.sendJSON(data)
-		
-		self.statusBar().showMessage('{} connected.'.format(action.text()), 6000)
+		self.changeComPort(action.text())
 	
+	
+	def changeComPort(self, portName):
+		''' Try to connect to 'portName' '''
+		
+		if self.commObject().isConnected():
+			print('Disconnect from', self.commObject().portName())
+		
+		if not self.commObject().connectPort(portName):
+			self.statusBar().showMessage('Unable to connect {}.'.format(portName), 6000)
+			return
+		
+		# Stream our robot config file
+		self.streamConfiguration()
+		
+		# Update last port
+		self.lastComPort = portName
+		
+		# Check menu action for current port
+		for act in self.portsMenu.actions():
+			if act.text() == portName:
+				act.setChecked(True)
+		
+		self.statusBar().showMessage('{} connected.'.format(portName), 6000)
+		
 	
 	def serialEvent(self):
 		''' JSON objects received '''
@@ -249,8 +292,29 @@ class MainWindow(QtGui.QMainWindow):
 	
 	
 	
+	def loadSettings(self):
+		''' Load settings '''
+		se = QSettings(fullPath('wulkabot.conf'), QSettings.IniFormat)
+		
+		se.beginGroup('commport')
+		self.lastComPort = se.value('lastport', '')
+		se.endGroup()
+		
+		
+	def saveSettings(self):
+		''' Save settings '''
+		se = QSettings(fullPath('wulkabot.conf'), QSettings.IniFormat)
+		
+		se.beginGroup('commport')
+		se.setValue('lastport', self.lastComPort)
+		se.endGroup()
+	
+	
 	def closeEvent(self, event):
-		self.commObject().disconnectPort()
+		''' App closing request '''
+		self.saveSettings()
+		
+		self._serialCom.disconnectPort()
 		event.accept()
 
 
