@@ -64,8 +64,8 @@ class MainWindow(QtGui.QMainWindow):
 		
 		self.statusBar().showMessage('Open a robot configuration file...')
 		
-		if self.recentFilesActs[0].data():
-			self.recentFilesActs[0].triggered.emit()
+		#if self.recentFilesActs[0].data():
+		#	self.recentFilesActs[0].triggered.emit()
 		
 		#self.setDockNestingEnabled(True)
 	
@@ -276,7 +276,7 @@ class MainWindow(QtGui.QMainWindow):
 		
 		jsonObjs = self._serialCom.readAllObjects()
 		
-		print('\nJSON data received:')
+		#print('\nJSON data received:')
 		for jsonObj in jsonObjs:
 			#print(json.dumps(jsonObj, sort_keys=True, indent=2, separators=(',', ': ')))
 			
@@ -357,14 +357,18 @@ class MainWindow(QtGui.QMainWindow):
 		# Load class instance
 		classInstance = loadClassFromModule('displays', display)
 		
+		data = None
+		if 'data' in options:
+			data = options['data']
+		
 		if display == 'Led':
 			c = classInstance(fid, name, True)
 		elif display == 'ProgressBar':
-			c = classInstance(fid, name, '{0}')
+			c = classInstance(fid, name, data=data, valueFormatting='{0}')
 		elif display == 'Slider':
-			c = classInstance(fid, name, '{0}')
+			c = classInstance(fid, name, data=data, valueFormatting='{0}')
 		elif display == 'Dial':
-			c = classInstance(fid, name, '{0}')
+			c = classInstance(fid, name, data=data, valueFormatting='{0}')
 		elif display == 'Alphanum':
 			c = classInstance(fid, name)
 		else:
@@ -375,8 +379,11 @@ class MainWindow(QtGui.QMainWindow):
 		c.valueChanged.connect(self.signalMapper.map)
 		self.signalMapper.setMapping(c, c)
 		
-		if 'range' in options:
-			c.setValueRange(int(options['range'][0]), int(options['range'][1]))
+		# if 'range' in options:
+		# 	c.setValueRange(int(options['range'][0]), int(options['range'][1]))
+		
+		if 'disable' in options:
+			c.widget().setDisabled(options['disable'])
 		
 		# Save display by ID (to set values when JSON data received)
 		self._fids[fid] = c

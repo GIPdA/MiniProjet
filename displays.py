@@ -69,26 +69,26 @@ class Led(Display):
 				self.widget().setChecked(value)
 				self.widget().blockSignals(False)
 		else:
-			raise TypeError
+			raise TypeError(str(value.__class__) + ' type not allowed fo Led')
 
 
 class ProgressBar(Display):
 	''' Display a progress bar '''
 	
-	def __init__(self, displayID, friendlyName, \
-	             valueFormatting = None, valueBefore = False, \
-	             valueRange = None, \
-	             vertical = False):
+	def __init__(self, displayID, friendlyName, data = None, \
+	             valueFormatting = None, valueBefore = False):
 		Display.__init__(self, displayID, friendlyName)
 		
-		if valueRange:
-			self.setValueRange(valueRange)
 		
 		pgb = QtGui.QProgressBar()
 		self.setWidget(pgb)
 		
-		pgb.setOrientation(Qt.Vertical if vertical else Qt.Horizontal)
+		if 'vertical' in data:
+			pgb.setOrientation(Qt.Vertical if data['vertical'] else Qt.Horizontal)
 		
+		if 'range' in data:
+			self.setValueRange(data['range'][0], data['range'][1])
+			
 		pgb.setMinimum(self.valueRange()['min'])
 		pgb.setMaximum(self.valueRange()['max'])
 		
@@ -97,10 +97,16 @@ class ProgressBar(Display):
 			self._textValue = QLabel()
 			self._valueFormatting = valueFormatting
 			
-			if valueBefore:
-				self._vbx.addWidget(self._textValue, 1, 0)
+			if 'vertical' in data and not data['vertical']:
+				if valueBefore:
+					self._vbx.addWidget(self._textValue, 1, 0)
+				else:
+					self._vbx.addWidget(self._textValue, 1, 2)
 			else:
-				self._vbx.addWidget(self._textValue, 1, 2)
+				if valueBefore:
+					self._vbx.addWidget(self._textValue, 0, 1)
+				else:
+					self._vbx.addWidget(self._textValue, 2, 1)
 			
 			self.setValue(0)
 	
@@ -116,7 +122,7 @@ class ProgressBar(Display):
 			if hasattr(self, '_textValue'):
 				self._textValue.setText(self._valueFormatting.format(value))
 		else:
-			raise TypeError
+			raise TypeError(str(value.__class__) + ' type not allowed fo ProgressBar')
 	
 	def setValueRange(self, minValue, maxValue):
 		
@@ -129,25 +135,25 @@ class ProgressBar(Display):
 class Slider(Display):
 	''' Display a slider '''
 	
-	def __init__(self, displayID, friendlyName, \
-	             valueFormatting = None, valueBefore = False, valueRange = None, \
-	             vertical = False, \
-	             tickInterval = None, invert = False):
+	def __init__(self, displayID, friendlyName, data = None, \
+	             valueFormatting = None, valueBefore = False):
+	             #invert = False):
 		
 		Display.__init__(self, displayID, friendlyName)
 		
-		if valueRange:
-			self.setValueRange(valueRange)
 		
 		sld = QtGui.QSlider()
-		
 		self.setWidget(sld)
 		
-		sld.setOrientation(Qt.Vertical if vertical else Qt.Horizontal)
+		if 'vertical' in data:
+			sld.setOrientation(Qt.Vertical if data['vertical'] else Qt.Horizontal)
 		
-		if invert:
-			sld.setInvertedAppearance(True)
+		# if invert:
+		# 	sld.setInvertedAppearance(True)
 		
+		if 'range' in data:
+			self.setValueRange(data['range'][0], data['range'][1])
+			
 		sld.setMinimum(self.valueRange()['min'])
 		sld.setMaximum(self.valueRange()['max'])
 		
@@ -159,10 +165,16 @@ class Slider(Display):
 			self._textValue = QLabel()
 			self._valueFormatting = valueFormatting
 			
-			if valueBefore:
-				self._vbx.addWidget(self._textValue, 1, 0)
+			if 'vertical' in data and not data['vertical']:
+				if valueBefore:
+					self._vbx.addWidget(self._textValue, 1, 0)
+				else:
+					self._vbx.addWidget(self._textValue, 1, 2)
 			else:
-				self._vbx.addWidget(self._textValue, 1, 2)
+				if valueBefore:
+					self._vbx.addWidget(self._textValue, 0, 1)
+				else:
+					self._vbx.addWidget(self._textValue, 2, 1)
 			
 			self.setValue(0)
 	
@@ -191,30 +203,31 @@ class Slider(Display):
 		self.widget().setMinimum(minValue)
 		self.widget().setMaximum(maxValue)
 		
-		Display.setValueRange(minValue, maxValue)
+		Display.setValueRange(self, minValue, maxValue)
 
 
 class Dial(Display):
 	''' Display a dial '''
 	
-	def __init__(self, displayID, friendlyName, \
-	             valueFormatting = None, valueBefore = False, valueRange = None, \
-	             vertical = False, \
-	             tickInterval = None, invert = False):
+	def __init__(self, displayID, friendlyName, data = None, \
+	             valueFormatting = None, valueBefore = False):#, \
+	             #invert = False):
 		
 		Display.__init__(self, displayID, friendlyName)
 		
-		if valueRange:
-			self.setValueRange(valueRange)
 		
 		dial = QtGui.QDial()
 		
 		self.setWidget(dial)
 		
-		dial.setOrientation(Qt.Vertical if vertical else Qt.Horizontal)
+		if 'vertical' in data:
+			dial.setOrientation(Qt.Vertical if data['vertical'] else Qt.Horizontal)
 		
-		if invert:
-			dial.setInvertedAppearance(True)
+		# if invert:
+		# 	dial.setInvertedAppearance(True)
+			
+		if 'range' in data:
+			self.setValueRange(data['range'][0], data['range'][1])
 		
 		dial.setMinimum(self.valueRange()['min'])
 		dial.setMaximum(self.valueRange()['max'])
@@ -227,10 +240,16 @@ class Dial(Display):
 			self._textValue = QLabel()
 			self._valueFormatting = valueFormatting
 			
-			if valueBefore:
-				self._vbx.addWidget(self._textValue, 1, 0)
+			if 'vertical' in data and not data['vertical']:
+				if valueBefore:
+					self._vbx.addWidget(self._textValue, 1, 0)
+				else:
+					self._vbx.addWidget(self._textValue, 1, 2)
 			else:
-				self._vbx.addWidget(self._textValue, 1, 2)
+				if valueBefore:
+					self._vbx.addWidget(self._textValue, 0, 1)
+				else:
+					self._vbx.addWidget(self._textValue, 2, 1)
 			
 			self.widget().blockSignals(True)
 			self.setValue(0)
