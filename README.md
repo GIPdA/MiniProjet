@@ -68,7 +68,7 @@ Des exemples sont disponibles avec les fichiers .bvc, ou avec le simulateur de r
 ####Layout
 Lorsque des fonctionnalités sont groupées, elles peuvent être arrangées dans une grille. La syntaxe est la suivante:
 
-**r***n***c***n***rs***n***cs***n*
+**r** *n* **c** *n* **rs** *n* **cs** *n*
 
 **r** pour le numéro de la rangée (row),
 **c** pour le numéro de la colonne (col),
