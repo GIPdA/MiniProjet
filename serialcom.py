@@ -50,8 +50,8 @@ class SerialCom(QObject):
 
 		# Serial port + serial events
 		self.serial = serial.Serial()
-		self._serialEv = SerialEvents(self.serial)
-		self._serialEv.readyRead.connect(self._readSerial)
+		# self._serialEv = SerialEvents(self.serial, verbose=1)
+		# self._serialEv.readyRead.connect(self._readSerial)
 
 
 	def _multiSub(self, subs, subject):
@@ -63,8 +63,7 @@ class SerialCom(QObject):
 	
 	
 	def __del__(self):
-		self._serialEv.stop()
-		self.serial.close()
+		self.disconnectPort()
 	
 	
 	def ports(self):
@@ -73,34 +72,69 @@ class SerialCom(QObject):
 			portslist.append(GenericPort(port, ''))
 		return portslist
 	
+	def portNames(self):
+		return PortsListener.ports()
+	
 	
 	def connectPort(self, portName):
 		if self._verbose > 1:
 			print('Opening serial port... (%s)' % portName)
 			
-		if self.serial.isOpen():
-			self.disconnectPort()
+		if self.isConnected():
+			if self.disconnectPort() == -1:
+				return -1
 		
-		if not self.serial.isOpen():
+		if not self.isConnected():
 			self.serial.port = portName
-			self.serial.open()
-			self.serial.flushInput()	# Flush buffer
-			self.serial.flushOutput()
-			self._serialEv.start()
+			try:
+				self.serial.open()
+				self.serial.flushInput()	# Flush buffer
+				self.serial.flushOutput()
+			
+				# Threads are not restartable, we shall recreate one each time
+				self._serialEv = SerialEvents(self.serial)
+				self._serialEv.readyRead.connect(self._readSerial)
+				self._serialEv.start()
+				
+				return True
+				
+			except serial.serialutil.SerialException as e:
+				print('Exception:', e)
+				return False
+		else:
+			print('Port unconnected! Unable to connect desired port.')
+		
+		return False
 			
 	
 	@QtCore.Slot()
 	def disconnectPort(self):
-		self._serialEv.stop()
+		
+		# Stop thread if created
+		if self._serialEv:
+			self._serialEv.stop()
+			
+			self._serialEv.join(5.0)	# Wait for the thread to quit
+			if self._serialEv.isAlive():
+				print('Unable to stop thread!')
+				return -1
+		
 		self.serial.close()
 	
+	
+	def isConnected(self):
+		return self.serial.isOpen()
+		
+	def portName(self):
+		return self.serial.name
 	
 		
 	def _readSerial(self):
 		self._dataRead += self._serialEv.readAll().decode(_CODING_SERIAL)
 		#print('SerialCom: ', self._dataRead)
 		
-		while True:
+		while True:	# Do .. while
+			# Match JSON string encapsulated in < >
 			match = re.search('^.*?(<({.*?})>)', self._dataRead)
 			
 			if match:
@@ -135,21 +169,22 @@ class SerialCom(QObject):
 	
 	def sendJSON(self, jsonData):
 		try:
-			self.sendJSONStr(json.dumps(jsonData))
-			return True
+			return self.sendJSONStr(json.dumps(jsonData))
 		except:
-			return False
+			print('JSON dump fail! Data not sent')
+			return -1
 	
 	def sendJSONStr(self, jsonStr):
 		
 		invalid = [('\n','\\n'), ('\r','\\r'), ("'",'"')]
 
 		json_str = self._multiSub(invalid, jsonStr)
-		self._sendStr(json_str)
+		return self._sendStr(json_str)
 	
 	def _sendStr(self, string):
 		if self.serial.isOpen():
-			self.serial.write(bytes('<' + string + '>', _CODING_SERIAL))
+			return self.serial.write(bytes('<' + string + '>', _CODING_SERIAL))
+		return -1
 
 
 	
