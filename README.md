@@ -68,12 +68,13 @@ Des exemples sont disponibles avec les fichiers .bvc, ou avec le simulateur de r
 ####Layout
 Lorsque des fonctionnalités sont groupées, elles peuvent être arrangées dans une grille. La syntaxe est la suivante:
 
-**r** *n* **c** *n* **rs** *n* **cs** *n*
+> rncnrsncsn
 
 **r** pour le numéro de la rangée (row),
 **c** pour le numéro de la colonne (col),
 **rs** pour le nombre de rangées à couvrir (row span),
 **cs** pour le nombre de colonnes à couvrir (col span).
+**n** étant le nombre associé à chaque clé.
 
 Des valeurs peuvent être omises, et suivant le cas un placement automatique est alors réalisé (en spécifiant r0, les fonctionnalités sont arrangées sur une seule rangée, avec c0 sur une seule colonne).
 
