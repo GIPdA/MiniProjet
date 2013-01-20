@@ -271,6 +271,11 @@ class MainWindow(QtGui.QMainWindow):
 	def serialEvent(self):
 		''' JSON objects received '''
 		
+		def wheelSpeed(value):
+			if value == 0: return 0
+			if value > 0: return 71-value
+			if value < 0: return -71-value
+		
 		jsonObjs = self.commObject().readAllObjects()
 		
 		#print('\nJSON data received:')
@@ -288,10 +293,10 @@ class MainWindow(QtGui.QMainWindow):
 						self.moveDirWheel(value)
 					
 					elif fid == 'leftWheel':
-						self.setSpeed_LeftWheel(value)
+						self.setSpeed_LeftWheel(wheelSpeed(value))
 					
 					elif fid == 'rightWheel':
-						self.setSpeed_RightWheel(value)
+						self.setSpeed_RightWheel(wheelSpeed(value))
 					
 					print('Value: ', value, 'for display ', fid)
 					
