@@ -163,6 +163,10 @@ class MainWindow(QtGui.QMainWindow):
 			if self.lastComPort in self.commObject().portNames():
 				print('>> Loading saved port config:', self.lastComPort)
 				self.changeComPort(self.lastComPort)
+			else:
+				print('Saved com port not available.')
+		else:
+			print('No com port saved.')
 	
 	
 	def moveDirWheel(self, value):
