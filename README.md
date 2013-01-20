@@ -96,7 +96,9 @@ Pour des fonctionnalités plus complexes, la valeur associée à un identifiant 
 
 * Ajouter protocole internet (udp ?)
 * Créer une classe 'abstraite' pour la communication
+* Permettre d'associer un nom à un groupe
 * Lister les ports 'en continu' (thread)
+* Sauvegarde vers fichier d'une configuration 'streamée'
 * Pouvoir modifier un affichage depuis l'interface superviseur
 * Fonctionnalités :
  - Ajouter réglage de taille/position des groupes
