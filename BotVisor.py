@@ -170,7 +170,7 @@ class MainWindow(QtGui.QMainWindow):
 		
 		# Load robot config file
 		bc = BotConfigParser()
-		data, botData = bc.loadConfigFile(configFileName)
+		data, botData, groupsData = bc.loadConfigFile(configFileName)
 		
 		# fullData = OrderedDict()
 		# fullData['__CONFIGURATION__'] = OrderedDict()
@@ -180,26 +180,43 @@ class MainWindow(QtGui.QMainWindow):
 		# print('>> Send JSON data')
 		# self._serialCom.sendJSON(fullData)
 		
-		self.loadRobot(botData, data)
+		self.loadRobot(botData, groupsData, data)
+	
+	def loadStreamedConfig(self, jsonData):
+		''' Load a config file streamed by a robot through com port '''
+			
+		if 'robot' not in jsonData or 'functionalities' not in jsonData:
+			print('Streamed config file seems invalid ! (no functionalities in)')
+			self.statusBar().showMessage('Streamed config file loading failed !', 6000)
+			return
 		
+		groupsData = None
+		if 'groups' in jsonData:
+			groupsData = jsonData['groups']
+		
+		self.loadRobot(jsonData['robot'], groupsData, jsonData['functionalities'])
+		
+		self.statusBar().showMessage('Streamed config file loaded !', 6000)
+	
 	
 	def streamRobotConfigFile(self, configFileName):
 		''' Stream a robot configuration file through com port '''
 		
 		# Load robot config file
 		bc = BotConfigParser()
-		data, botData = bc.loadConfigFile(configFileName)
+		data, botData, groupsData = bc.loadConfigFile(configFileName)
 		
 		fullData = OrderedDict()
 		fullData['__CONFIGURATION__'] = OrderedDict()
 		fullData['__CONFIGURATION__']['robot'] = botData
+		fullData['__CONFIGURATION__']['groups'] = groupsData
 		fullData['__CONFIGURATION__']['functionalities'] = data
 		
 		print('>> Stream config file')
 		self._serialCom.sendJSON(fullData)
 	
 	
-	def loadRobot(self, botData, functionalitiesData):
+	def loadRobot(self, botData, groupsData, functionalitiesData):
 		''' Load a robot from configuration file '''
 		
 		self.clearRobot()
@@ -223,7 +240,7 @@ class MainWindow(QtGui.QMainWindow):
 			#print(functionalitiesData[fuKeys].keys())
 			options = functionalitiesData[fuKeys]
 			if 'display' in options.keys():
-				self.loadFunctionality(fuKeys, options['display'], options)
+				self.loadFunctionality(fuKeys, options['display'], options, groupsData)
 				fnum = fnum+1
 			else:
 				print('Error: functionality', fuKeys, 'not loaded')
@@ -319,18 +336,6 @@ class MainWindow(QtGui.QMainWindow):
 					self.statusBar().showMessage('Value for {} received ({}).'.format(fid, value), 2000)
 	
 	
-	def loadStreamedConfig(self, jsonData):
-		''' Load a config file streamed by a robot through com port '''
-			
-		if 'robot' not in jsonData or 'functionalities' not in jsonData:
-			print('Streamed config file seems invalid ! (no functionalities in)')
-			self.statusBar().showMessage('Streamed config file loading failed !', 6000)
-			return
-		
-		self.loadRobot(jsonData['robot'], jsonData['functionalities'])
-		
-		self.statusBar().showMessage('Streamed config file loaded !', 6000)
-	
 	
 	def addSubWindow(self, widget, title):
 		''' Add a subwindow with title containing widget '''
@@ -348,7 +353,7 @@ class MainWindow(QtGui.QMainWindow):
 		return widget
 	
 	
-	def loadFunctionality(self, fid, display, options):
+	def loadFunctionality(self, fid, display, options, groups = None):
 		''' Load a functionality '''
 		
 		def availableLayoutPosition(layout, direction = 'r', start = (0,0) ):
@@ -428,7 +433,10 @@ class MainWindow(QtGui.QMainWindow):
 				self._wgtgrp[group] = w
 				newsw = True
 			else:
-				self._wgtgrp[group].parent().setWindowTitle('Group '+str(group))
+				if str(group) in groups:	# Check if group name specified
+					self._wgtgrp[group].parent().setWindowTitle(groups[str(group)])
+				else:
+					self._wgtgrp[group].parent().setWindowTitle('Group '+str(group))
 			
 			widget = self._wgtgrp[group]
 			

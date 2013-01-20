@@ -26,6 +26,10 @@ class BotConfigParser:
 		print('Robot name:', botName)
 		settings.endGroup()
 		
+		settings.beginGroup('groups')
+		groups = settings.value('groups')
+		settings.endGroup()
+		
 		settings.beginGroup('functionalities')
 		
 		funcData = OrderedDict()
@@ -44,7 +48,7 @@ class BotConfigParser:
 		settings.endGroup()
 		
 		#print(json.dumps(funcData, sort_keys=True, indent=2, separators=(',', ': ')))
-		return funcData, robotData
+		return funcData, robotData, groups
 
 
 

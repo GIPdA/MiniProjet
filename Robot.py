@@ -33,7 +33,10 @@ class MainWindow(QtGui.QMainWindow):
 	
 	lastComPort = None
 	
-	configStream = '''{'__CONFIGURATION__':{'robot':{'name':'Wulka Bot'}, 'functionalities':{
+	configStream = '''{'__CONFIGURATION__':{'robot':{'name':'Wulka Bot'},
+	'groups':{'1':'Capteurs avants', '2':'Capteurs arrières', '3':'Roues', '4':'Télémètres avants', '5':'Télémètres arrières'},
+	
+	'functionalities':{
 	'sens_fl2':{'display':'Led', 'group':1, 'layout':'r0', 'disable':true},
 	'sens_fl1':{'display':'Led', 'group':1, 'layout':'r0', 'disable':true},
 	'sens_fm':{'display':'Led', 'group':1, 'layout':'r0', 'disable':true},
@@ -55,7 +58,7 @@ class MainWindow(QtGui.QMainWindow):
 	'srl1_value':{'display':'ProgressBar', 'group':5, 'layout':'r0', 'data':{'vertical':true}},
 	'srr1_value':{'display':'ProgressBar', 'group':5, 'layout':'r0', 'data':{'vertical':true}},
 	
-	'robotDirWheelRotation':{'display':'Dial', 'data':{'range':[0, 360], 'vertical':true}}
+	'robotDirWheelRotation':{'display':'Dial', 'name':'Direction', 'data':{'range':[0, 360], 'vertical':true}}
 	}}}'''
 	
 	def __init__(self):
