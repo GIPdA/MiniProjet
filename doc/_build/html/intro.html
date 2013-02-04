@@ -1,0 +1,150 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Mini Projet - Superviseur de robot &mdash; BotVisor 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BotVisor 1.0 documentation" href="index.html" />
+    <link rel="next" title="Communication" href="communication.html" />
+    <link rel="prev" title="Welcome to BotVisor’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Index général"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="communication.html" title="Communication"
+             accesskey="N">suivant</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to BotVisor’s documentation!"
+             accesskey="P">précédent</a> |</li>
+        <li><a href="index.html">BotVisor 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mini-projet-superviseur-de-robot">
+<h1>Mini Projet - Superviseur de robot<a class="headerlink" href="#mini-projet-superviseur-de-robot" title="Lien permanent vers ce titre">¶</a></h1>
+<p>Ce logiciel permet la supervision et le contrôle d&#8217;un robot.</p>
+<p>Il permet de gérer des <em>fonctionnalités</em> de façon très flexible : voyants, capteurs TOR, capteurs analogiques, moteurs, servomoteurs, afficheurs, etc.</p>
+<p>Différents modèles de robots sont supportés par l&#8217;utilisation de fichiers de configuration que l&#8217;on peut charger au démarrage de l&#8217;application. Le robot peut également envoyer lui-même sa configuration au superviseur, permettant ainsi de se passer de fichier de configuration.</p>
+<div class="section" id="fonctionnalite">
+<h2>Fonctionnalité ?<a class="headerlink" href="#fonctionnalite" title="Lien permanent vers ce titre">¶</a></h2>
+<p>Une fonctionnalité est en fait un type d&#8217;affichage. Un capteur TOR peut être un bouton radio, un capteur analogique peut être affiché avec une barre de progression.</p>
+<p>Mais ce n&#8217;est pas qu&#8217;un affichage, cela peut également être une commande: un curseur, un potar, etc, ou des assemblages plus complexes.</p>
+<p>Elles sont également totalement &#8216;customisable&#8217; via les données de configuration, et vous pouvez en créer de nouvelles selon vos besoins.</p>
+<p>Voir section ?? pour plus de détails.</p>
+</div>
+<div class="section" id="communication">
+<h2>Communication<a class="headerlink" href="#communication" title="Lien permanent vers ce titre">¶</a></h2>
+<p>La communication est basé sur un principe de messages, sans accusés de réception. Les messages sont au format JSON, format simple à utiliser et nativement disponible avec Python (et également disponible avec nombre d&#8217;autres languages).</p>
+<p>Actuellement seule la communication sur port série est gérée.</p>
+<p>Section ??</p>
+</div>
+<div class="section" id="utilisation">
+<h2>Utilisation<a class="headerlink" href="#utilisation" title="Lien permanent vers ce titre">¶</a></h2>
+<p>L&#8217;utilisation du superviseur est très simple et ne nécessite que quelques clics. Voici les étapes :</p>
+<ol class="arabic simple">
+<li>Lancer le superviseur via le script <em>botvisor</em> ou directement BotVisor.py avec Python (attention nécessite Python 3.3 !),</li>
+<li>Sélectionner un port via le menu <em>Ports</em> si nécessaire (le dernier port ouvert au dernier lancement est automatiquement ré-ouvert si possible),</li>
+<li>Charger un fichier de configuration (<em>File</em> &gt; <em>Open Robot...</em>) ou bien attendre que le robot envoi sa configuration.</li>
+<li><span class="through">Faire joujou !</span> Superviser...</li>
+</ol>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table des matières</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Mini Projet - Superviseur de robot</a><ul>
+<li><a class="reference internal" href="#fonctionnalite">Fonctionnalité ?</a></li>
+<li><a class="reference internal" href="#communication">Communication</a></li>
+<li><a class="reference internal" href="#utilisation">Utilisation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Sujet précédent</h4>
+  <p class="topless"><a href="index.html"
+                        title="Chapitre précédent">Welcome to BotVisor&#8217;s documentation!</a></p>
+  <h4>Sujet suivant</h4>
+  <p class="topless"><a href="communication.html"
+                        title="Chapitre suivant">Communication</a></p>
+  <h3>Cette page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/intro.txt"
+           rel="nofollow">Montrer la source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Recherche rapide</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Saisissez un mot clef ou un nom de module, classe ou fonction.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Index général"
+             >index</a></li>
+        <li class="right" >
+          <a href="communication.html" title="Communication"
+             >suivant</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to BotVisor’s documentation!"
+             >précédent</a> |</li>
+        <li><a href="index.html">BotVisor 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Benjamin Balga &amp; Cédric Chrétien.
+      Créé avec <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

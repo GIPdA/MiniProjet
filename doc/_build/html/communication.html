@@ -1,0 +1,148 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Communication &mdash; BotVisor 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BotVisor 1.0 documentation" href="index.html" />
+    <link rel="next" title="Affichages" href="displays.html" />
+    <link rel="prev" title="Mini Projet - Superviseur de robot" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Index général"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="displays.html" title="Affichages"
+             accesskey="N">suivant</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Mini Projet - Superviseur de robot"
+             accesskey="P">précédent</a> |</li>
+        <li><a href="index.html">BotVisor 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="communication">
+<h1>Communication<a class="headerlink" href="#communication" title="Lien permanent vers ce titre">¶</a></h1>
+<p><em>Actuellement seule la communication sur port série est gérée.</em></p>
+<div class="section" id="principe">
+<h2>Principe<a class="headerlink" href="#principe" title="Lien permanent vers ce titre">¶</a></h2>
+<p>La communication du superviseur fonctionne sur un principe de <strong>messages</strong>, sans accusés de réception.
+Un message est au format JSON, sous la forme d&#8217;un dictionnaire (élément = clé + valeur), comme par exemple :</p>
+<div class="highlight-python"><pre>{
+        'led':True,
+        'leftMotor':90,
+        'complexData':{'button':True, 'text':Hello World!}
+}</pre>
+</div>
+<p>Le nombre d&#8217;éléments minimum est de 1, il n&#8217;y a pas de maximum. Il n&#8217;est pas obligatoire d&#8217;envoyer tous les éléments correspondant aux fonctionnalités, uniquement ceux à mettre à jour.</p>
+</div>
+<div class="section" id="protocole">
+<h2>Protocole<a class="headerlink" href="#protocole" title="Lien permanent vers ce titre">¶</a></h2>
+<p>Le dictionnaire JSON est converti en chaine de caractères afin d&#8217;être envoyé, et entouré de &lt; &gt; afin d&#8217;être correctement traité à la réception:</p>
+<div class="highlight-python"><pre>&lt;{'led':True,'leftMotor':90,'complexData':{'button':True, 'text':Hello World!}}&gt;</pre>
+</div>
+<p>La conversion en chaine du dictionnaire JSON est réalisé par le module JSON de python (<em>json.stringify()</em>), et la reconnaissance du dico JSON à la réception est faite à l&#8217;aide d&#8217;une expression régulière :</p>
+<div class="highlight-python"><pre>(serialCom.py, SerialCom::_readSerial)
+
+match = re.search('^.*?(&lt;({.*?})&gt;)', self._dataRead)</pre>
+</div>
+<p>Puis converti à nouveau en dico python à l&#8217;aide de la fonction <em>loads</em> de json.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table des matières</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Communication</a><ul>
+<li><a class="reference internal" href="#principe">Principe</a></li>
+<li><a class="reference internal" href="#protocole">Protocole</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Sujet précédent</h4>
+  <p class="topless"><a href="intro.html"
+                        title="Chapitre précédent">Mini Projet - Superviseur de robot</a></p>
+  <h4>Sujet suivant</h4>
+  <p class="topless"><a href="displays.html"
+                        title="Chapitre suivant">Affichages</a></p>
+  <h3>Cette page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/communication.txt"
+           rel="nofollow">Montrer la source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Recherche rapide</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Saisissez un mot clef ou un nom de module, classe ou fonction.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Index général"
+             >index</a></li>
+        <li class="right" >
+          <a href="displays.html" title="Affichages"
+             >suivant</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Mini Projet - Superviseur de robot"
+             >précédent</a> |</li>
+        <li><a href="index.html">BotVisor 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Benjamin Balga &amp; Cédric Chrétien.
+      Créé avec <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
